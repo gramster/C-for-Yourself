@@ -1,0 +1,42 @@
+\documentstyle [11pt,a4,twoside]{report}
+%\documentstyle [texindex,11pt,a4,twoside]{report}
+\input{biihead.sty}
+\input{macros.sty}
+\pagestyle{biiheadings}
+%\raggedbottom
+\makeindex
+%\includeonly{c7}
+\begin{document}
+%\sloppy
+%\begin{titlepage}
+%\pagenumbering{roman}
+%\vspace{8cm}
+%\centerline{\Huge C}
+%\vspace{2cm}
+%\centerline{\bf \copyright 1989}
+%\centerline{\bf Department of Computer Science}
+%\centerline{\bf University of Cape Town}
+%\centerline{\bf Rondebosch, South Africa 7700.}
+%\end{titlepage}
+%
+%\pagebreak
+\tableofcontents
+%\pagebreak
+%\listoffigures
+%\pagebreak
+\include{intro}
+\include{c1}
+\pagebreak
+\include{c2}
+\include{c3}
+\include{c4}
+\include{c5}
+\include{c6}
+\appendix
+\include{vi}
+\include{c7}
+%\include{c8}
+\pagebreak
+\insertindex
+\end{document}
+

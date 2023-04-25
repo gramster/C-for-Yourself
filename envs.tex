@@ -1,0 +1,29 @@
+%
+\newcommand{\fn}{\bf}	% file name
+\newcommand{\kc}{\em}	% key concept
+\newcommand{\ms}{\it}	% meta symbol
+\newcommand{\cd}{\tt}	% program code
+\newcommand{\cmd}{\sf}	% command
+\newcommand{\tab}{\hspace*{2em}}
+%
+\newcommand{\addVspace}{\\[.5\baselineskip]}
+\newcommand{\CR}{$\hookleftarrow$}
+\newcommand{\CTRL}{$\uparrow$}
+\newcommand{\ESC}{{\sc esc}}
+%
+\def\caret{{\tt\char'136}}
+%
+\newenvironment{compact}% single spaced environment
+{\renewcommand{\baselinestretch}{1}\footnotesize\normalsize}%
+{\renewcommand{\baselinestretch}{1.5}\footnotesize\normalsize}
+%
+%\newenvironment{display}[1]{#1\begin{tabbing}\hspace*{3em}\=\+\kill}%
+%{\end{tabbing}}
+\newenvironment{display}{%
+\begin{list}{}{\setlength{\leftmargin}{3em}}
+\item[]}{\end{list}}
+%
+\newenvironment{code}{\cd\begin{tabbing}%
+\hspace*{3em}\=mmm\=mmm\=mmm\=mmm\=mmm\=mmm\=mmm\=mmm\=\+\kill}%
+{\end{tabbing}}
+

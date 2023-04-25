@@ -1,0 +1,265 @@
+\documentstyle[11pt,A4,lists,twoside,miihead]{report}
+%\showboxbreadth=20
+%\showboxdepth=20
+\pagestyle{biiheadings}
+\renewcommand{\lefthead}{Wheeler and Smit}
+\input{envs}
+\begin{document}
+%\tracingall
+
+\chapter{The C Program Structure}
+
+
+A C  program consists  of {\kc preprocessor commands}, {\kc
+comments}, some {\kc top-level declarations}, and  one or  more {\kc
+functions},  possibly spread over more than one file. One  of the 
+functions must  be called  {\cd main}; this  is always  the first
+function to  be executed.  Functions may refer to (or call) one
+another, with the exception of  {\cd main}, which cannot be called by
+any other function. The order of the functions  in the  file is
+incidental; they are typically grouped together according to their
+purpose.  The next section describes the preprocessor and all but the
+first paragraph may be skipped on the first reading of this book.
+
+\section{The Preprocessor}
+
+The C preprocessor is  a simple  macroprocessor, controlled  by
+special  command  lines within the source program.  Each command line
+begins with a hash ({\cd \#}); in most compilers, this must be the
+first character on the line. The common commands are:
+ 
+The preprocessor  executes all  such  commands  it  finds  in the 
+source file, removing them as it does so. Preprocessor commands can
+be split over more than one line by ending each line except the last
+with a backslash (\verb+\+).
+
+\subsection{Macro Definitions}
+
+Macro definitions  provide a  way of  naming useful constants, as well
+as improving readability  and abbreviating  common short  pieces of
+text. A macro definition has the form
+where $[]$ indicate optional parts.
+
+Once a macro has been defined, and until the end of the file containing
+the definition or  an {\cd \#undef}  command for  the same  macro,
+{\em all occurrences of the macro name  in the  file will  be replaced by
+the macro body.}  If arguments are used, these will be substituted into
+the macro body.
+
+Some examples will help. Firstly, naming useful constants:
+These are  reasonably obvious  examples. As  far as  the  first  two 
+are concerned, C provides no reserved words for the boolean values
+true and false, but treats  zero as  being false  and everything else
+as being true, with one being the canonical true  value. Thus,
+by defining  these macros, we can use {\cd TRUE} and  {\cd FALSE} in
+our program  instead of  the more  obscure 1  and  0.  The {\cd
+BUFFERSIZE} example  illustrates a technique for improving
+readability (as with {\cd TRUE} and  {\cd FALSE}), as  well  as ease 
+of  modification.  This  constant  would presumably be  used when 
+declaring line  buffers, for example. If the desired size of  the
+line  buffer changed,  it would  only be  necessary to change the
+macro definition,  instead of  searching for  the number 80 and
+changing it to the new number throughout the file, which is an
+error-prone method.
+
+Examples of macros taking arguments are:
+ Macros thus  offer a  simple alternative  to functions\footnote{A
+function in C is a group of statements associated with a name, by
+which they can be called and executed.}. The difference is that a 
+function is  compiled once, and every time it is referenced, a call is
+made to  that same  single function.  A macro,  however, is simply
+{\em a textual replacement before compilation even  begins\/}. Thus 
+every time the macro is used, the compiler will generate code  for
+the  whole macro. The advantage of macros is that they  make
+programs  easier to  read and  modify. In  general, the use of
+complex macros  is discouraged,  as a  function would  almost always
+serve the purpose better. However, a macro is generally better than a
+trivial function.
+
+Macros can  refer to  one another,  as was  shown  above:  when  a 
+macro reference occurs  in a  program,  the  macro  body  is 
+substituted,  and  the preprocessor carries on from the
+{\em beginning\/} of the substituted text. However, a macro cannot refer to
+another macro which has not yet been defined.
+
+{\bf Warning:} You  should use  parentheses in  macros wherever 
+they could  be ambiguous. This is surprisingly often. Take, for
+example, the following macro:
+To remove a definition, use the {\cd \#undef} command as in
+     By convention upper case letters are usually used for macros that
+are simply constants (e.g.\ PI). Macros that take arguments are often
+regarded as being similar to functions, and the convention then does not
+apply.
+
+
+\subsection{Including Text From Other Files}
+
+The command
+causes  the  entire content  of  the specified file  (the {\kc
+include file\/}) to be processed as  if it had appeared  in  place of
+the command. It may be  that the included file itself contains {\cd
+\#include} commands; the depth to which this is possible varies from
+system to system.
+
+     File names  must be  in double quotes ({\cd ""}) or angle brackets
+({\cd <>}). The quotes are used  for user  files, the  angle brackets 
+for  UNIX  system  files.  The difference is that files enclosed in
+quotes are first searched for in the same directory as  the program, 
+and then  in the standard directories, while files enclosed in angle
+brackets are searched for in the standard directories only.  Under
+UNIX, the standard include directory is {\cd /usr/include}.
+
+There is  a  standard input/output header file, called {\fn stdio.h},
+which must be included  by any  C program that performs input or
+output. As it is a short file, and defines a few useful constants, it
+is best to always include it. You should print  a copy of your
+system's {\fn stdio.h} file and examine it to see what constants it
+defines (for example, some define the {\cd TRUE} and {\cd FALSE}
+constants we defined above, while others do not).
+
+
+The command
+causes  the  entire content  of  the specified file  (the {\kc
+include file\/}) to be processed as  if it had appeared  in  place of
+the command. It may be  that the included file itself contains {\cd
+\#include} commands; the depth to which this is possible varies from
+system to system.
+
+     File names  must be  in double quotes ({\cd ""}) or angle brackets
+({\cd <>}). The quotes are used  for user  files, the  angle brackets 
+for  UNIX  system  files.  The difference is that files enclosed in
+quotes are first searched for in the same directory as  the program, 
+and then  in the standard directories, while files enclosed in angle
+brackets are searched for in the standard directories only.  Under
+UNIX, the standard include directory is {\cd /usr/include}.
+
+There is  a  standard input/output header file, called {\fn stdio.h},
+which must be included  by any  C program that performs input or
+output. As it is a short file, and defines a few useful constants, it
+is best to always include it. You should print  a copy of your
+system's {\fn stdio.h} file and examine it to see what constants it
+defines (for example, some define the {\cd TRUE} and {\cd FALSE}
+constants we defined above, while others do not).
+
+     
+
+\subsection{Conditional Compilation}
+
+     Conditional commands  allow parts  of  the  program  to  be 
+included  or excluded from  compilation, depending  on some 
+condition. As the preprocessor must be  able to determine the
+condition, only simple constant expressions are allowed, with the
+usual C convention that if the expression has value zero, it is
+considered false, otherwise true. The main use of conditional
+compilation is to make programs more portable, and to (conditionally)
+include debugging code in a program.  The general form of a
+conditional is:
+Constant expressions will be described in detail later; for now it is
+enough to say that {\em constant\_expression\/} is an expression that can be
+evaluated immediately from  the   information  known   by  the 
+compiler  (or,  in  this  case,  the preprocessor). If  the
+expression  is true,  {\ms text\_section\_one\/} is included by
+the preprocessor  and {\ms text\_section\_two\/}  is ignored; if
+the  expression  is false, it is the other way around.
+
+Two other forms of {\cd \#if} are available, namely:
+These test  whether the  macro name  has been  defined or  is 
+undefined, respectively. This could be of use, for example, if we are
+unsure whether {\cd TRUE} has been defined. We could use:
+Comments in  C are  enclosed within  {\cd /*} and {\cd */}.  Comments
+can continue over more than one line. You should not use comments within
+comments; {\cd /*} is not recognised within a comment,
+so (usually) the first {\cd */} found indicates the end of comments. 
+However, this is compiler dependent and not all compilers may act
+this way.
+
+\subsection{My Own Heading}
+
+A function  is a  collection of  {\kc declarations\/} and  {\kc
+statements\/} enclosed in braces {\cd \{\}}, and preceded by a {\kc
+function name}. The minimal C function, which does
+nothing(it contains no declarations or statements), is:
+ The parentheses  following the  name are  necessary;  they  are  used
+to enclose the  names of  the function's  arguments, if any. Even if
+there are no arguments, they  serve to  indicate to the compiler that
+the name is that of a function, and not a variable. Function names
+must be valid C {\kc identifiers\/}.
+     Identifiers in  C are  names for functions and variables. They
+may be any combination  of  upper  and  lower  case letters, 
+digits  (0--9),  and  the underscore character (\_), the only
+restriction being that they may not begin with a  digit (this  is so
+that the compiler can recognise them as identifiers and not numbers).
+In older compilers only the first eight characters are significant, thus the
+compiler  might not  distinguish between  {\cd long\_name\_1} and  
+{\cd long\_name\_2}. The case of the letters is significant,  thus 
+{\cd Total}  and  {\cd total}  are  different identifiers (it  is
+considered  bad style  to have two identifiers that differ only in
+their case).
+
+     All identifiers are characterised by two attributes: their {\kc
+type\/} and their {\kc storage class\/}.  The  type  represents the 
+identifier type,  for  example,  {\cd int} (integer), {\cd float} 
+(floating point  number), {\cd char} (character), or function. The
+storage class  determines the  identifier's {\kc scope\/}  and {\kc
+visibility\/}; that is, how accessible the identifier is from other
+parts of the program. The main storage classes are:
+     Conditional commands  allow parts  of  the  program  to  be 
+included  or excluded from  compilation, depending  on some 
+condition. As the preprocessor must be  able to determine the
+condition, only simple constant expressions are allowed, with the
+usual C convention that if the expression has value zero, it is
+considered false, otherwise true. The main use of conditional
+compilation is to make programs more portable, and to (conditionally)
+include debugging code in a program.  The general form of a
+conditional is:
+Constant expressions will be described in detail later; for now it is
+enough to say that {\em constant\_expression\/} is an expression that can be
+evaluated immediately from  the   information  known   by  the 
+compiler  (or,  in  this  case,  the preprocessor). If  the
+expression  is true,  {\ms text\_section\_one\/} is included by
+the preprocessor  and {\ms text\_section\_two\/}  is ignored; if
+the  expression  is false, it is the other way around.
+
+Two other forms of {\cd \#if} are available, namely:
+These test  whether the  macro name  has been  defined or  is 
+undefined, respectively. This could be of use, for example, if we are
+unsure whether {\cd TRUE} has been defined. We could use:
+Comments in  C are  enclosed within  {\cd /*} and {\cd */}.  Comments
+can continue over more than one line. You should not use comments within
+comments; {\cd /*} is not recognised within a comment,
+so (usually) the first {\cd */} found indicates the end of comments. 
+However, this is compiler dependent and not all compilers may act
+this way.
+
+
+A function  is a  collection of  {\kc declarations\/} and  {\kc
+statements\/} enclosed in braces {\cd \{\}}, and preceded by a {\kc
+function name}. The minimal C function, which does
+nothing(it contains no declarations or statements), is:
+ The parentheses  following the  name are  necessary;  they  are  used
+to enclose the  names of  the function's  arguments, if any. Even if
+there are no arguments, they  serve to  indicate to the compiler that
+the name is that of a function, and not a variable. Function names
+must be valid C {\kc identifiers\/}.
+     Identifiers in  C are  names for functions and variables. They
+may be any combination  of  upper  and  lower  case letters, 
+digits  (0--9),  and  the underscore character (\_), the only
+restriction being that they may not begin with a  digit (this  is so
+that the compiler can recognise them as identifiers and not numbers).
+In older compilers only the first eight characters are significant, thus the
+compiler  might not  distinguish between  {\cd long\_name\_1} and  
+{\cd long\_name\_2}. The case of the letters is significant,  thus 
+{\cd Total}  and  {\cd total}  are  different identifiers (it  is
+considered  bad style  to have two identifiers that differ only in
+their case).
+
+     All identifiers are characterised by two attributes: their {\kc
+type\/} and their {\kc storage class\/}.  The  type  represents the 
+identifier type,  for  example,  {\cd int} (integer), {\cd float} 
+(floating point  number), {\cd char} (character), or function. The
+storage class  determines the  identifier's {\kc scope\/}  and {\kc
+visibility\/}; that is, how accessible the identifier is from other
+parts of the program. The main storage classes are:
+\end{document}
+
+

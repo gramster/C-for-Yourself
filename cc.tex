@@ -1,0 +1,158 @@
+\cleardoublepage
+\chapter{The UNIX {\cmd cc} Compiler}
+\label{cc}
+\index{cc@{\cmd cc}}     
+     The {\cmd cc} compiler is the main compiler of the UNIX system,
+and comprises  several parts.  These parts  are often  transparent to
+the user,  since  the  {\cmd cc} command calls them as necessary.
+Nontheless, it is useful to know a little bit about the compiler and
+its constituent phases.
+
+     First, there  is the  {\kc preprocessor\/}, {\cmd cpp}. This is a 
+simple macroprocessor, which has  a small  set of commands allowing
+macros to be defined, sections of program to  be conditionally 
+compiled, text  from other files to be included, and so  on. {\cmd
+cpp} also strips comments from files. The output from {\cmd cpp} is
+passed as a text stream to the first pass of the compiler.
+
+     The compiler  conceptually operates  in  two  passes,  although 
+on  most systems these  actually occur  together. The  first pass
+takes the output from {\cmd cpp} and  converts it  into an 
+intermediate file. This file typically contains assembly language 
+statements for  the higher  level  program  code  (such  as loops),
+and  a symbolic  representation of  the lower level expressions in
+the program. The  second pass copies the assembly language statements
+to a further intermediate file, and generates assembly language for
+the expressions. There is also an optional optimisation phase, {\cmd
+c2}, after the second pass.
+
+     The compiler  output is   given  to the  {\kc assembler\/},
+{\cmd as}.  This is  the resident UNIX  assembler and  varies from 
+system to  system.  The  assembler converts the  assembly language 
+file into machine code, and saves the results in a file using the
+ UNIX common  object file  format (or  COFF). This  format
+includes various  headers, symbol  table and relocation information,
+and three sections -- one for  the machine  code (called {\bf
+.text}), one for the initialised data in the program (called {\bf
+.data}), and one for  uninitialised data (called {\bf .bss}).
+
+     The assembler  output file  is then passed to the {\kc linker\/}, 
+{\cmd ld}. This is the standard UNIX linker. It adds any necessary
+library functions to the file, and resolves references across files
+if the program is split over several files.
+
+\section{File Names}
+
+The  name of  the C source  file should always end with  a {\fn .c}
+suffix. Two of the compilation phases  create intermediate files with
+the same name as the source file, but with different suffixes, namely:
+ \begin{display}
+\begin{tabular}{@{}ll@{}}
+          {\fn .s} &  the output from the second pass \\
+          {\fn .o} &  the output from the assembler 
+\end{tabular}
+\end{display}
+\noindent
+ These intermediate files are usually destroyed, unless you specify
+otherwise (see later).  The final executable file is always put in a
+file called {\fn a.out}, unless you specify otherwise. 
+
+\section{Invoking the Compiler}
+\index{cc@{\cmd cc}!options}
+To invoke the compiler, use:
+\begin{display}\ms
+{\cmd cc} $[$options\/$]$ files
+\end{display}
+\noindent
+     {\ms files\/}  can be  one or more {\fn .c}, {\fn .s} and/or
+{\fn .o}  files -- {\cmd cc} will invoke only the appropriate
+compilation phase(s) for each file.  Zero or  more options  may be 
+specified.  The  main options are:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+ {\cmd -c}  & Don't run the {\cmd ld} linker (that is, make only a 
+ 					{\fn .o} file). \\
+ {\cmd -g}  & Generate debugging information\index{debugging!compiling for debuggers}. \\
+ {\cmd -p}  & Generate code for execution profiles. \\
+ {\cmd -O}  & Optimise the code produced by the compiler. \\
+ {\cmd -S}  & Don't delete the {\fn .s} files. \\
+ {\cmd -E}  & Run {\cmd cpp} only, sending output to the standard
+					output. \\
+ {\cmd -C}  & Stop {\cmd cpp} from removing comments. \\
+ {\cmd -o} {\ms name\/} & Give the final (executable) file the name 
+ 							{\ms name}. 
+\end{tabular}
+\end{display}
+\noindent
+     Once a program has been compiled, assembled and linked without
+errors, it can be executed by simply typing its name.
+
+
+\subsection{Preprocessor Options}
+\index{cpp@{\cmd cpp}!options}
+     The preprocessor  has a  few options  which can  be sent  to  it 
+either directly (if it is invoked as {\cmd cpp}), or via {\cmd cc}.
+The options are:
+\begin{display}
+\begin{tabular}{@{}lp{.6\textwidth}@{}}
+  {\cmd -I}{\ms dir\/}  &  Search the directory {\ms dir\/} for 
+									{\cd \#include} files first. \\
+  {\cmd -C}             &  Don't remove comments. \\
+  {\cmd -U}{\ms id\/}   &  Undefine {\ms id\/} (equivalent to 
+                          {\cd \#undef} {\ms id\/}). \\
+  {\cmd -D}{\ms id\/}[={\ms string\/}] & 
+       Define {\ms id\/}. If the ={\ms string\/} part is omitted, this is 
+       equivalent to {\cd \#define} {\ms id\/}, otherwise it is equivalent 
+       to  {\cd \#define} {\ms id string\/}. If the string {\ms string\/} 
+       contains spaces, it must be quoted (the quotes will be removed by 
+       {\cmd cpp}).
+\end{tabular}
+\end{display}
+
+
+\section{Controlling Compilation with simple Shell Scripts}
+
+     If you  often repeat  the same compilation sequence after editing
+a file, you can save the sequence in a file and then execute it as a
+{\kc shell script\/}. For example, suppose  you want  to compile  and
+execute  several programs, but you want to  optimise all compilations
+and generate execution profiles. Thus, you are typically repeating
+this sequence:
+\begin{display}\cmd
+  cc -p -O -o {\ms output\_file\/} {\ms source\_file\/} \\
+  {\ms output\_file\/}
+\end{display}
+\noindent
+     You can  create a  shell script to generalise this sequence.
+Firstly, use an editor to create a file (called say {\fn mycc}), 
+containing the following two lines:
+\begin{display}\cmd
+ cc -p -O -o \$2 \$1 \\
+ \$2
+\end{display}
+\noindent
+Then, after having saved the file, issue the UNIX command
+\begin{display}\cmd
+ chmod u+x mycc
+\end{display}
+\noindent
+ which changes the  file's access mode  setting.
+   It adds  ({\cmd +}) execute ({\cmd x}) permission for the
+user ({\cmd u}) of the file {\cmd mycc}.
+
+     The {\cmd \$1}  and {\cmd \$2}  refer to the positional
+arguments which you supply to {\cmd mycc}. If, for example, you use:
+\begin{display}\cmd
+mycc prog1.c prog1
+\end{display}
+\noindent
+     {\cmd \$1} will  be {\cmd prog1.c}  and {\cmd \$2}  will be  {\cmd
+prog1}. This  will  compile  {\cmd prog1.c} appropriately, leaving the
+output in the file {\cmd prog1}, and then execute {\cmd prog1}.
+
+     Shell scripts  are considerably  more powerful  than this  simple
+example illustrates, and  can often  be an  effective aid  in
+simplifying such routine tasks.  However, a much more sophisticated
+way of maintaining programs is with the {\cmd make} utility, which is
+described later.
+

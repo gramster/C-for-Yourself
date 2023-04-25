@@ -1,0 +1,195 @@
+\cleardoublepage
+\chapter{ANSI extensions to K\&R C}
+\index{ANSI C}
+\index{K\&R C}
+This chapter considers some of the ANSI extensions to Kernighan and
+Ritchie C. These extensions are only supported by fairly recent
+compilers.
+
+\section{Preprocessor Enhancements}
+\index{cpp@{\cmd cpp}!ANSI enhancements to}
+
+The preprocessor operator {\cd \#\#} allows concatenation of
+preprocessor arguments. Two simple examples should suffice
+as illustration.  Given
+\begin{code}     
+     \#define JOIN(a,b) \tab \=a\#\#b \\
+     \#define PLURAL(a) \>  a\#\#s 
+\end{code}
+\noindent
+then
+\begin{display}\cd
+\begin{tabular}{@{}ll@{}}
+\rm\bf The call & \rm\bf Expands to \addVspace
+     JOIN(cat,mat)   &    catmat\\
+     PLURAL(cat)     &    cats
+\end{tabular}
+\end{display}
+\noindent
+     The operator {\cd \#} converts a macro argument to a string. For
+example, given the definition
+\begin{code}
+     \#define WRITE(s) \tab printf(\#s)
+\end{code}
+\noindent
+then {\cd WRITE(cat)} will expand to {\cd printf("cat")}
+     
+     The {\cd \#error} preprocessor command causes the preprocessor
+(and compiler) to print the specified message and stop compiling.
+For example,
+\begin{code}     
+     \#ifndef NULL \\
+     \#error "stdio.h must be included" \\
+     \#endif
+\end{code}
+\noindent
+     There is also a {\cd \#pragma} preprocessor command used to pass
+information to the compiler, but that is beyond the scope of this
+book.  
+
+The ANSI standard includes several predefined macros:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+\cd  \_\_DATE\_\_ &  the date of compilation \\
+\cd  \_\_TIME\_\_ &  the time of compilation \\
+\cd  \_\_FILE\_\_ &  the name of the source file being compiled \\
+\cd  \_\_STDC\_\_ &  a nonzero constant \\
+\cd  \_\_LINE\_\_ &  the current line number
+\end{tabular}
+\end{display}
+\noindent
+ The first four of these are strings; the last two are integers. The
+\_\_STDC\_\_ macro is used to indicate that the version of C being used
+complies with the ANSI standard; if this macro is not defined, then your
+C compiler does not comply with the standard.
+     
+\section{Type Modifiers -- {\cd signed}, {\cd const} and
+{\cd volatile}}
+\index{signed@{\cd signed}}
+\index{const@{\cd const}}
+\index{volatile@{\cd volatile}}
+\index{types!ANSI enhancements to}
+\index{constants!using {\cd const}}
+In addition to the {\cd unsigned} type modifier, a {\cd signed}
+modifier has been added. This was previously unnecessary, as the
+default was always to use signed representation for characters and
+integers. The use of {\cd signed} allows this to be made explicit.
+Some compilers also have options allowing the user to specify whether
+the default {\cd char} type should be signed or unsigned, and in the
+latter case, the {\cd signed} modifier is needed to override the
+default.
+
+ANSI C supports constants by using the type modifier {\cd
+const}. In K\&R C, constants were always handled by using preprocessor
+macros. The {\cd const} type modifier is more flexible, allowing
+arbitrary type constants (for example, constant arrays can be
+declared). Obviously, a constant must be initialised when it is
+declared.
+
+Pointer {\cd const}s are also supported. In this case, the pointer
+points to a fixed address.  The object at that address may be
+modified, but the pointer cannot be changed.
+For example:
+\begin{code}
+const unsigned long *clock\_tick = (unsigned long *)0x512;
+\end{code}
+\noindent
+ declares a constant pointer which points to a {\cd long} situated at
+address $512_{16}$ (which happens to be the clock tick counter on an
+IBM PC). The following would then be legal under
+MS-DOS\footnote{MS-DOS is a trademark of Microsoft Corporation.}:
+\begin{code}
+*clock\_tick = 0l; \tab	/* Reset the tick counter */
+\end{code}
+\noindent
+since it is assigning to a variable which is pointed to by a constant.
+However, the following is {\bf not} legal:
+\begin{code}
+clock\_tick = NULL;
+\end{code}
+\noindent
+as it is attempting to assign to a constant.
+
+The type modifier {\cd volatile} tells the compiler not to perform
+any optimisations on the specified variables. The reasons for using
+this modifier are beyond the scope of this book.
+
+\section{Function Prototypes}
+
+\index{functions!ANSI enhancements to}
+\index{functions!prototypes}
+A characteristic of K\&R C is the poor type checking that is performed
+by the compiler. In other words, the compiler will typically not report
+any problems with the following:
+\begin{code}
+void funk(a,b) \\
+\> char a;		\\
+\> int b;		\\
+\{  				\\
+ \> \vdots 		\\
+\} 				\addVspace		
+
+long x, y;    \\
+\vdots		  \\
+funk(x,y);	  \\
+\vdots
+\end{code}
+\noindent
+ This is obviously incorrect, as we are passing a total of eight bytes
+(two {\cd long}s) as parameters to a function which expects four bytes (a
+{\cd char}, which is cast to {\cd int}, and an {\cd int}. It is this
+vulnerability to errors which resulted in the development of C program
+checkers such as {\cmd lint}.
+
+ANSI C supports a different syntax for function declarations which
+allows strong type checking and avoids these types of errors. Pascal
+programmers will find the new syntax, called {\kc function
+prototyping}, much more familiar. To declare a function using
+prototypes, the parameter types are specified within the argument
+list itself. The function must be declared before any in order calls for the
+type checking to be used. This may require forward declarations in
+some cases. Often, each global function has a prototype declaration
+in a header file, which is included by files which call the
+functions. For example, compilers that support ANSI C will use
+function prototypes for the input and output routines, and declare
+these prototypes in the {\fn stdio.h}\index{stdio.h@{\fn stdio.h}} file. Thus, 
+by including {\fn stdio.h}, all calls to standard I/O functions have strong type
+checking applied.
+
+The use of prototypes is best illustrated by an example. Consider the
+function declaration:
+\begin{code}
+void funk(a,b,c)	\\
+\> int a;			\\
+\> char *c;			\\
+\> float b[];		\\
+\{						\\
+ \> \vdots			\\
+\}
+\end{code}
+\noindent
+In K\&R C, a forward declaration of such a function would look like
+\begin{code}
+void funk(a,b,c);
+\end{code}
+\noindent
+Notice that this gives no information about the parameter types.
+Using prototypes, the function would be declared as:
+\begin{code}
+void funk(int a, float b[], char *c) \\
+\{												 \\
+ \> \vdots									 \\
+\}
+\end{code}
+\noindent
+and a forward declaration would be
+\begin{code}
+void funk(int a, float b[], char *c);
+\end{code}
+\noindent
+ giving complete type information on the function type as well as the
+parameters. Our original erroneous example would immediately be
+reported by the compiler if we had used prototypes. In fact,
+prototypes eliminate much of the need for checkers such as {\cmd
+lint}.
+

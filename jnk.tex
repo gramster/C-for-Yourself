@@ -1,0 +1,28 @@
+\chapter{The C Program Structure}
+
+
+A C  program consists  of {\kc preprocessor commands}, {\kc
+comments}, some {\kc top-level declarations}, and  one or  more {\kc
+functions},  possibly spread over more than one file. One  of the 
+functions must  be called  {\cd main}; this  is always  the first
+function to  be executed.  Functions may refer to (or call) one
+another, with the exception of  {\cd main}, which cannot be called by
+any other function. The order of the functions  in the  file is
+incidental; they are typically grouped together according to their
+purpose.  The next section describes the preprocessor and all but the
+first paragraph may be skipped on the first reading of this book.
+
+\section{The Preprocessor}
+
+The C preprocessor is  a simple  macroprocessor, controlled  by
+special  command  lines within the source program.  Each command line
+begins with a hash ({\cd \#}); in most compilers, this must be the
+first character on the line. The common commands are:
+ 
+The preprocessor  executes all  such  commands  it  finds  in the 
+source file, removing them as it does so. Preprocessor commands can
+be split over more than one line by ending each line except the last
+with a backslash (\verb+\+).
+
+
+

@@ -1,0 +1,117 @@
+% remove [portableC] from the \documentstyle command below if you
+% prefer the old format.  However, be sure to somehow include the
+% section marked `% incorporate any additional commands I find necessary'.
+
+\chapter{Portable Programs}
+\bibliographystyle{alpha}
+\label{portable}
+
+% The number between brackets is the minor revision number which
+% must be removed when we finally agree on the contents.
+
+\title{{\bf Notes on Writing\\Portable Programs in C}\\
+       {\small (Nov 1990, 8th Revision)}
+      }
+
+\author{A. Dolenc%
+  \protect\thanks{Internet: \id{ado@sauna.hut.fi}.}
+       \\ A. Lemmke \\
+  {\em Helsinki University of Technology} \\
+         D. Keppel%
+  \protect\thanks{Internet: \id{pardo@cs.washington.edu}.} \\
+  {\em CS\&E, University of Washington} \\
+         {\normalsize and} \\
+	G. V. Reilly%
+  \protect\thanks{Internet: \id{gvr@cs.brown.edu}.} \\
+  {\em Dept.\ of Computer Science, Brown University}
+}
+\porttitle
+
+{
+\abstract
+\parskip=4pt plus 1pt
+\parindent=0pt
+
+This documents describes the features and non-features of 
+different C~preprocessors, compilers, and environments.  As such,
+it is an incomplete document, growing as information is gathered.
+It contains some material concerning ANSI~C but it is not a
+substitute for the Standard itself.
+We assume the reader is familiar with the C~programming language.
+\endabstract
+}
+
+\pagebreak
+%\parskip=4pt plus 1pt
+%\parindent=0pt
+\raggedbottom
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\section{Foreword}
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+We will call a program {\em portable\/} if adapting it to a new
+environment is easier than rewriting it for that environment.
+This document is mainly for those who have {\em never\/} ported
+a program to another platform --- a specific hardware and
+software environment --- and, evidently, for those who plan to
+write large systems which must be used across different vendor
+machines.  If you have already done some porting, you may not
+find the information herein very useful.
+
+We suggest that \cite{style} be read in conjunction with this
+document.\footnote{\cite{style} can be obtained via {\em
+anonymous FTP\/} from \site{cs.washington.edu} in
+\file{\twiddle{}ftp/pub/cstyle.tar.Z}\@.} Posters to the newsgroup
+\ng{comp.lang.c} have repeatedly recommended \cite{MH} and
+\cite{AK} (none of the information herein has been taken from
+those two references).
+
+{\bf Disclaimer:} We will attempt to keep the information herein
+updated, but it can happen that some of it may be incorrect at
+the time of reading. The code fragments presented are intended
+to make applications ``more'' portable, meaning that they may
+fail with some compilers and/or environments.
+
+{\footnotesize
+
+This document can be obtained via anonymous FTP from
+\site{sauna.hut.fi} [130.233.251.253] in
+\file{\twiddle{}ftp/pub/CompSciLab/doc}.  The files
+\file{portableC.tex}, \file{portableC.sty},
+\file{portableC.bib}, and \file{portableC.ps.Z} are the \LaTeX\
+source and style files, {\sc Bib}\TeX\ and the compressed {\sc PostScript},
+respectively. Alternatively, there is a site in the US
+from which one can obtain all four
+files, \site{cs.washington.edu} [128.95.1.4] in
+\file{\twiddle{}ftp/pub/cport.tar.Z}\@. All files are in the
+public domain. Comments, suggestions, flames, eggs, and requests
+for copies via e-mail should be directed to
+\id{ado@sauna.hut.fi}.
+}
+
+
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+\section{Introduction}
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The aim of this document is to collect the experience of several
+people who have had to write and/or port programs written in~C
+to more than one platform.
+
+In order to keep this document within reasonable bounds, we must
+restrict ourselves to programs which must execute under
+Unix-like operating systems and those which implement a
+reasonable Unix-like environment. The only exception we will
+consider is VMS\@.
+
+A wealth of information can be obtained from programs that have
+been written to run on several platforms. This is the case of
+publicly available software such as that developed by the Free
+Software Foundation and the MIT X~Consortium.
+
+When discussing portability, one focuses on two issues:
+
+\newcommand{\newblock}{}
+\bibliography{portC}
+

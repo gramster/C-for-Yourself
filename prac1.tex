@@ -1,0 +1,48 @@
+Practical Session 1
+
+
+1) Use vi to enter the program below. The program replaces tabs in a
+file with spaces. Use tabs to indent the program - this will allow us
+to test the program with its own listing:
+
+
+#include <stdio.h>
+#define TABSTOP 8
+
+main()
+{
+int col;
+char c;
+
+col=0;
+while (!feof(stdin)) {
+     c=getchar();
+     if (c=='\t')
+          do putchar(' '); while (++col%TABSTOP);
+     else {
+          col++;
+          putchar(c);
+          if (c=='\n') col=0;
+          }
+     }
+}
+
+2) Use cc to compile the program, and test it with the program
+listing.
+
+3) Define three vi macros. The first, 'w', should insert 'while ()' at
+the current position, and put vi into insert mode at the right
+parenthesis ')'. The second, 'd', is similar, except with text 'do
+()'. The third, 'c', should insert '{ }' and position vi in insert
+mode at the '}'. The last, 'b', should insert '( )' and position vi in
+insert mode at the ')'. Think how these macros could help us enter
+programs such as the one above. Using a macro such as 'b' for brackets
+has the added benefit that we are less likely to have missing brackets
+in expressions.
+
+4) Write, enter and test a shell script 'develop <program> <test
+file>', to repeatedly execute vi on <program>, compile <program>, and,
+if no errors occured in compilation, execute a.out with <test file> as
+input.
+
+

@@ -1,0 +1,21 @@
+Practical Session 4
+
+1)    Enter     vi     with     file     menu.c.     Write     a     function
+do_menu(menu,response,valid_res), which takes as arguments menu (a pointer to
+one of  the menu  functions),  response  (a  pointer  to  a  character),  and
+valid_res (a string of characters representing valid responses). The function
+should have  a local  variable buff,  a string of 80 characters. The function
+should clear  the screen,  print the  menu, underline it, get a response (use
+gets(buff);) for  this). *response  should be  set to  the first character in
+buff (use toupper(c)), and CONT should be returned.
+
+Change main  in main.c to test using this function to print the menus and get
+a response.
+
+2) The  C if  statement has  the basic form if (expression) statement. Change
+do_menu so  that after  getting a response, if the first character in buff is
+ASCII 0 it returns QUIT immediately (note: use == to test for equality in C).
+
+3) Change  getvalue to  take three integer arguments, bottom, top and old. If
+the value  entered lies  in the  range [bottom,top],  it should  be returned;
+otherwise, old should be returned.

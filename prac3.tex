@@ -1,0 +1,108 @@
+Practical Session 3
+
+We now  begin to  build functions  which will eventually form an interactive,
+menu-driven file-examination  utility which  will allow  us to  examine files
+screen-by-screen in different formats.
+
+In order  both to  simplify  writing  the  program  and  to  ensure  as  much
+uniformity as  possible, the  design of  the program  has already  been done.
+Roughly, the program will operate as follows:
+
+1 - the top-level menu will ask for a file name, or 'Q' to quit.
+
+2 -  if a file name is entered, the program will attempt to open the file for
+       reading
+
+3 -  if it  fails, an  error message  will be generated, and we return to the
+       top-level menu (1)
+
+4 - otherwise, the first screen of the file will be displayed as text
+
+5 - at the end of the screen, the program will wait for a response
+
+6 -  if the  response is  just a  <return>, we  display the  next screen, and
+       continue at (5)
+
+7 -  if the  response is  '-<return>', we  display the  previous screen,  and
+       continue at (5)
+
+8 -  otherwise we  display a menu (the file menu) allowing the user to change
+       the view of the file (choice of text, or octal, decimal or hexadecimal
+       dump), or  go to  an option menu (9) or the top-level menu (1). At the
+       end of the file menu we redisplay the screen, and continue at (5).
+
+9 -  if the  option menu  is selected, we display this menu, which allows the
+       screen size  to be  changed, and  line numbers  (text view) or offsets
+       (dumps) to  be turned  on or  off. At  the end of the options menu, we
+       return to the file menu (8)
+
+An include  file, view.h,  is available for use in the program. This contains
+the following definitions:
+
+#include <stdio.h>
+#include <ctype.h>
+
+/******************************/
+/* Useful macros for booleans */
+/******************************/
+
+#define SWITCH(s)   (s?"on":"off") /* "on" if s true; else "off" */
+#define TOGGLE(s)   {s=1-s;}       /* Switch true/false          */
+
+/**********************/
+/* Menu return values */
+/**********************/
+
+#define QUIT        0         /* Return value for quit      */
+#define CONT        1         /* Return value for continue  */
+
+/*****************/
+/* Views of file */
+/*****************/
+
+#define OCTAL       8         /* Base 8 view           */
+#define DECIMAL     10        /* Base 10 view          */
+#define HEXADECIMAL 16        /* Base 16 view          */
+#define TEXT        26        /* ASCII Text view       */
+
+/******************/
+/* Line numbering */
+/******************/
+
+#define NUMWIDTH    (numbr?6:0)    /* Columns of screen used for */
+                                   /* line number (6 if numbering*/
+                                   /* is on; otherwise 0.        */
+#define NUMFMT      "%4d> "        /* Format for printing line   */
+                                   /* numbers (can change this   */
+                                   /* easily if a macro)         */
+
+/****************/
+/* Clear Screen */
+/****************/
+
+#define CLEARSCREEN printf("%c[H%c[J",27,27) /* This works! */
+
+/****************************************************************/
+
+
+1) Begin  by editing  the file menu.c. This file already exists, and contains
+functions to  print the three menus, as well as a function void pause() which
+causes a  short delay  (this is useful for after printing error messages, and
+so on).
+
+2) Add  a function, error(msg) char *msg; which prints ERROR followed by msg,
+beeps and pauses.
+
+3) Add a function getvalue() which prints a message requesting a value, reads
+an integer value, and returns this value.
+
+4) Look  at the  menu printing functions. Each begins by printing the name of
+the menu,  followed by Enter: and a list of options. Write a function heading
+to print  a large  heading (whatever you want to call your program), and call
+this function  at the  start of  each menu. Now, change the functions so that
+heading prints the menu name and ENTER: itself.
+
+5) Save  the file.  Edit a  new file, main.c. Write a main() function to test
+the functions you have written. Save this file.
+
+6) Compile and run the program.

@@ -1,0 +1,651 @@
+\cleardoublepage
+\chapter{The C Programming Language}
+
+
+A C  program consists  of {\kc preprocessor commands}, {\kc
+comments}, some {\kc top-level declarations}, and  one or  more {\kc
+functions},  possibly spread over more than one file. One  and only one of the 
+functions must  be called  {\cd main}\index{main@{\cd main}}; this  is always  
+the first
+function to  be executed.  Functions may refer to (or call) one
+another, with the exception of  {\cd main}, which cannot be called by
+any other function. The order of the functions  in the  file is
+incidental; they are typically grouped together according to their
+purpose.  The next section describes the preprocessor and all but the
+first paragraph may be skipped on the first reading of this book.
+
+\section{The Preprocessor}
+\index{cpp@{\cmd cpp}}
+
+The C preprocessor is  a simple  macroprocessor, controlled  by
+special  command  lines within the source program.  Each command line
+begins with a hash ({\cd \#}); in most compilers, this must be the
+first character on the line. The common commands are:
+ \begin{display}
+\begin{tabular}{@{}ll@{}}   
+          {\cd \#define}       &  define a macro \\
+          {\cd \#undef}        &  remove a macro definition \\
+          {\cd \#include}      &  include another file \\
+          {\cd \#if, \#ifdef,}  & conditional ... \\  
+          {\cd \#ifndef, \#else,} & ...test... \\
+          {\cd \#endif}         & ... commands
+\end{tabular}
+\end{display}
+\noindent
+ The preprocessor  executes all  such  commands  it  finds  in the 
+source file, removing them as it does so. Preprocessor commands can
+be split over more than one line by ending each line except the last
+with a backslash (\verb+\+).
+
+\subsection{Macro Definitions}
+
+Macro definitions  provide a  way of  naming useful constants, as well
+as improving readability  and abbreviating  common short  pieces of
+text. A macro definition has the form \index{define@{\cd \#define}}
+\begin{display}\cd
+\#define {\ms macro\_name\/} $[$({\ms arguments\/})$]$  $[${\ms
+macro\_body}$]$
+\end{display}
+\noindent
+where $[]$ indicate optional parts.
+
+Once a macro has been defined, and until the end of the file containing
+the definition or  an {\cd \#undef} \index{undef@{\cd \#undef}} command for  the same  macro,
+{\em all occurrences of the macro name  in the  file will  be replaced by
+the macro body.}  If arguments are used, these will be substituted into
+the macro body.
+
+Some examples will help. Firstly, naming useful constants:
+\begin{display}\cd   
+\begin{tabular}{@{}ll@{}}   
+      \#define TRUE   & 1 \\
+      \#define FALSE      & 0 \\
+      \#define PI         & 3.1415927 \\
+      \#define BUFFERSIZE & 80 \\
+      \#define STAR       & '*' \\
+      \#define ERROR      & -1 
+\end{tabular} 
+\end{display}
+\noindent
+These are  reasonably obvious  examples. As  far as  the  first  two 
+are concerned, C provides no reserved words for the Boolean\index{booleans}
+values
+true and false, but treats  zero as  being false  and everything else
+as being true, with one being the canonical true  value. Thus,
+by defining  these macros, we can use {\cd TRUE} and  {\cd FALSE} in
+our program  instead of  the more  obscure 1  and  0.  The {\cd
+BUFFERSIZE} example  illustrates a technique for improving
+readability \index{style!readability}(as with {\cd TRUE} and  
+{\cd FALSE}), as  well  as ease 
+of  modification.  This  constant  would presumably be  used when 
+declaring line  buffers, for example. If the desired size of  the
+line  buffer changed,  it would  only be  necessary to change the
+macro definition,  instead of  searching for  the number 80 and
+changing it to the new number throughout the file, which is an
+error-prone method.
+
+Examples of macros taking arguments are:
+\begin{display}\cd
+\begin{tabular}{@{}lll@{}}   
+ \#define  &  square(x)             &  ((x)*(x)) \\
+ \#define  &  cube(x)               &  ((x)*(x)*(x)) \\
+ \#define  &  hypotenu(a,b)         &   (sqrt(square(a)+square(b))) \\
+ \#define  &  distance(x1,y1,x2,y2) &   (hypotenu(x1-x2,y1-y2)) 
+\end{tabular}
+\end{display}
+\noindent
+ Macros thus  offer a  simple alternative  to functions\footnote{A
+function in C is a group of statements associated with a name, by
+which they can be called and executed.}. The difference is that a 
+function is  compiled once, and every time it is referenced, a call is
+made to  that same  single function.  A macro,  however, is simply
+{\em a textual replacement before compilation even  begins\/}. Thus 
+every time the macro is used, the compiler will generate code  for
+the  whole macro. 
+\index{macros!compared to functions}
+\index{functions!compared to macros}
+The advantage of macros is that they  make
+programs  easier to  read and  modify. In  general, the use of
+complex macros  is discouraged,  as a  function would  almost always
+serve the purpose better. However, a macro is generally better than a
+trivial function.
+
+Macros can  refer to  one another, \index{macros!within macros} as was  shown  above:  when  a 
+macro reference occurs  in a  program,  the  macro  body  is 
+substituted,  and  the preprocessor carries on from the
+{\em beginning\/} of the substituted text. However, a macro cannot refer to
+another macro which has not yet been defined.
+
+{\bf Warning:} \index{macros!dangers of}You  should use  parentheses in  macros wherever 
+they could  be ambiguous. This is surprisingly often. Take, for
+example, the following macro:
+\begin{code}
+\#define  SQUARE(x) \tab  x*x
+\end{code}
+\noindent
+If this was used in the program as:
+\begin{code}
+SQUARE(z+1)
+\end{code}
+\noindent
+this would expand to:
+\begin{code}
+z+1*z+1
+\end{code}
+\noindent
+or {\cd z+z+1}, which is hardly what we want. The safest definition here is
+the one given earlier for {\cd square(x)}.
+
+To remove a definition, use the {\cd \#undef} \index{undef@{\cd \#undef}}command as in
+\begin{code}
+\#undef SQUARE
+\end{code}
+\noindent
+     By convention \index{macros!style}\index{style!macros}upper case letters are usually used for macros that
+are simply constants (e.g.\ PI). Macros that take arguments are often
+regarded as being similar to functions, and the convention then does not
+apply.
+
+
+\subsection{Including Text From Other Files}
+
+The command\index{include@{\cd \#include}} 
+\begin{code}
+\#include  <filename>
+\end{code}
+\noindent
+causes  the  entire content  of  the specified file  (the {\kc
+include file\/}) to be processed as  if it had appeared  in  place of
+the command. It may be  that the included file itself contains {\cd
+\#include} commands; the depth to which this is possible varies from
+system to system.
+
+     File names  must be  in double quotes ({\cd ""}) or angle brackets
+({\cd <>}). The quotes are used  for user  files, the  angle brackets 
+for  UNIX  system  files.  
+\index{include@{\cd \#include}!<>@{\cd <>} form}
+\index{include@{\cd \#include}!""@{\cd ""} form}
+The difference is that files enclosed in
+quotes are first searched for in the same directory as  the program, 
+and then  in the standard directories, while files enclosed in angle
+brackets are searched for in the standard directories only.  Under
+UNIX, the standard include directory is {\cd /usr/include}.
+
+There is  a  standard input/output header file, called 
+{\fn stdio.h}\index{stdio.h@{\fn stdio.h}},
+which must be included  by any  C program that performs input or
+output. As it is a short file, and defines a few useful constants, it
+is best at first to always include it. You should print  a copy of your
+system's {\fn stdio.h} file and examine it to see what constants it
+defines (for example, some define the {\cd TRUE} and {\cd FALSE}
+constants we defined above, while others do not).
+
+     
+
+\subsection{Conditional Compilation}\index{conditional compilation}
+\index{style!portability}
+
+     Conditional commands  allow parts  of  the  program  to  be 
+included  or excluded from  compilation, depending  on some 
+condition. As the preprocessor must be  able to determine the
+condition, only simple constant expressions are allowed, with the
+usual C convention that if the expression has value zero, it is
+considered false, otherwise true. The main use of conditional
+compilation is to make programs more portable, and to (conditionally)
+include debugging code in a program.  The general form of a
+conditional is:
+\index{if@{\cd \#if}}
+\index{else@{\cd \#else}}
+\index{endif@{\cd \#endif}}
+\begin{code}
+\#if {\ms constant\_expression\/} \\
+ \> {\ms text\_section\_one\/} \\
+\#else \\
+ \> {\ms text\_section\_two\/} \\
+\#endif
+\end{code}
+\noindent
+Constant expressions \index{expressions!constant}will be described in detail later; for now it is
+enough to say that {\em constant\_expression\/} is an expression that can be
+evaluated immediately from  the   information  known   by  the 
+compiler  (or,  in  this  case,  the preprocessor). If  the
+expression  is true,  {\ms text\_section\_one\/} is included by
+the preprocessor  and {\ms text\_section\_two\/}  is ignored; if
+the  expression  is false, it is the other way around.
+
+Two other forms of {\cd \#if} are available, namely:
+\index{ifdef@{\cd \#ifdef}}
+\index{ifndef@{\cd \#ifndef}}
+\begin{code}
+\#ifdef  {\ms macro\_name\/}
+\end{code}
+\noindent
+and
+\begin{code}
+\#ifndef {\ms macro\_name\/}
+\end{code}
+\noindent
+These test  whether the  macro name  has been  defined or  is 
+undefined, respectively. This could be of use, for example, if we are
+unsure whether {\cd TRUE} has been defined. We could use:
+\begin{display}\cd
+\begin{tabular}{@{}ll@{}}
+  \#ifndef &  TRUE \\
+  \#define &  TRUE 1 \\
+  \#endif &
+\end{tabular}
+\end{display}
+     
+
+\section{Comments}
+\index{comments}
+
+Comments in  C are  enclosed within  {\cd /*} and {\cd */}.  Comments
+can continue over more than one line. You should not use comments within
+comments; {\cd /*} is not recognised within a comment,
+so (usually) the first {\cd */} found indicates the end of comments. 
+However, this is compiler dependent and not all compilers may act
+this way.
+
+\section{Functions}
+\index{functions}
+
+A function  is a  collection of  {\kc declarations\/} and  {\kc
+statements\/} enclosed in braces {\cd \{\}}, and preceded by a {\kc
+function name}. The minimal C function, which does
+nothing\footnote{This is not quite true, because the function, as
+declared here, returns a value by default, but more about this
+later.} (it contains no declarations or statements), is:
+\begin{code}
+ tiny() \\
+ \{ \\
+ \}
+\end{code}
+\noindent
+ The parentheses  following the  name are  necessary;  they  are  used
+to enclose the  names of  the function's  arguments\index{arguments}, if any. Even if
+there are no arguments, they  serve to  indicate to the compiler that
+the name is that of a function, and not a variable. Function names
+\index{functions!names}must be valid C {\kc identifiers\/}.
+
+     
+
+\subsection{Identifiers}
+\index{identifiers}
+
+     Identifiers in  C are  names for functions and variables. They
+may be any combination  of  upper  and  lower  case letters, 
+digits  (0--9),  and  the underscore character (\_), the only
+restriction being that they may not begin with a  digit (this  is so
+that the compiler can recognise them as identifiers and not numbers).
+In older compilers only the first eight characters are significant, thus the
+compiler  might not  distinguish between  {\cd long\_name\_1} and  
+{\cd long\_name\_2}. The case of the letters is significant,  thus 
+{\cd Total}  and  {\cd total}  are  different identifiers (it  is
+considered  bad style  to have two identifiers that differ only in
+their case)\index{style!identifier names}.
+
+     All identifiers are characterised by two attributes: their {\kc
+type\/} \index{types}and their {\kc storage class\/}\index{storage classes}.  The  type  represents the 
+identifier type,  for  example,  {\cd int} (integer), {\cd float} 
+(floating point  number), {\cd char} (character), or function. The
+storage class  determines the  identifier's {\kc scope\/}  
+\index{scope}and {\kc visibility\/}; that is, how accessible the 
+identifier is from other
+parts of the program. The main storage classes are:
+\begin{description}
+
+\item[external:] 
+\index{extern@{\cd extern}}\index{storage classes!extern@{\cd extern}}an external 
+identifier can be referenced from
+anywhere in the program, even  if the  program is  split over 
+several  files.  The linker ({\cmd ld}\index{ld@{\cmd ld}})  knows the  details of  all
+external  identifiers and can thus resolve  references across  files.
+All functions and top-level declarations are  external unless 
+otherwise specified.  Memory for external variables is allocated once
+only, at compile time. Another name for external identifiers is {\kc
+global identifiers\/}.
+
+\item[automatic:] 
+\index{auto@{\cd auto}}\index{storage classes!auto@{\cd auto}}this is the 
+default storage class for all variables
+declared within blocks.  Top-level declarations of automatic
+variables are  not allowed.  An automatic variable can only be
+accessed within the block \index{statements!compound}containing 
+its  declaration.   It  is  
+called  automatic because  memory  is automatically allocated  for it
+when the block is entered and given up when the block is exited (that
+is, at run time, not compile time as in external). This means that
+the value of an automatic variable is lost  when the  function is 
+exited (they are {\kc volatile}).  The linker \index{ld@{\cmd ld}}does 
+not need any information about  automatic
+variables.  Another name for automatic variables is {\kc local
+variables\/}, as they are local to the block that contains them.
+
+\item[static:] 
+\index{static@{\cd static}}\index{storage classes!static@{\cd static}}static  
+variables are much the same as external
+variables. Like externals, they  have storage  allocated for  them
+once, at compile time. Thus  the value  of a  static variable  is
+{\em not}  lost when the containing block  is exited (it is 
+{\kc non-volatile}).  However, a
+static  identifier is not visible outside its containing block, is
+not available to  the linker, and thus cannot be accessed across
+files.  They thus  provide a  way of limiting  the  sharing  of 
+non-volatile variables. A  typical use  of static  identifiers  is  for 
+use  in execution profiles  -- counting the number  of times  a
+function is executed. Each  function can have a  static variable
+which has one added each time the function is entered.  Such a
+counter can also be used by a function to determine the first time it
+is being executed and act appropriately.  For example, an output routine 
+can open a file for output the first time it is called.
+
+\end{description}   
+
+\subsection{Simple Declarations and Statements}
+\index{declarations}
+
+     Before we can begin using functions, we need variables to hold
+the values we want  to work  upon. All  variables in  C must  be
+declared before being used.  This tells the compiler necessary 
+details about  the variable,  such as the type \index{types}and storage 
+class\index{storage classes}. At 
+this stage,  we will  just consider  very  basic  declarations of
+integer and character variables. Such a declaration has the general
+form
+ \begin{display}
+{\ms storage\_class\/} {\ms type\/} {\ms list\_of\_identifiers\/};
+\end{display}
+\noindent
+ where {\ms storage\_class\/} is optional.  The default storage class
+specifier is external for top  level  declarations  and  functions, 
+and automatic  for  any  other declarations.  If {\ms
+storage\_class\/} is present, it should be one of {\cd extern}, {\cd
+auto}, {\cd static}, or {\cd register} (the latter will be described
+later).  The {\ms type\/} specifier is essential  and
+in this case should be either {\cd int} or {\cd char}.  {\ms
+list\_of\_identifiers\/} must  contain at  least one identifier name,
+but may have more, in which case each identifier must  be separated 
+by  commas.  Like all  C  statements, a declaration is terminated by
+a semicolon. For example:
+ \begin{code}
+int x,y,result; \\
+static char c, next\_c; 
+\end{code}
+\noindent
+Having declared  these variables,  we can  use them  in simple 
+{\kc assignment statements\/}, for example:
+\begin{code}
+ result = x+y; \\
+ c = '*';
+\end{code}
+\noindent
+Note the  use of  {\cd =} for assignment as opposed to Pascal's {\cd
+:=}, as well as single quotes  to enclose  {\kc character
+constants\/} \index{constants!character}in C as opposed to double quotes, which are used for {\kc
+string constants\/}\index{constants!string}.
+
+     In order  to make  our programs  produce meaningful results, we
+need some way of entering and printing the values of these variables.
+
+\subsection{Basic Character and Integer Input/Output}
+
+Input and  output statements,  strangely enough,  are not a part
+of the C language itself.  C is a small language, and many of its
+features are actually provided by  precompiled functions  in special 
+{\kc system  libraries}\index{libraries}.  The linker 
+\index{ld@{\cmd ld}}searches the libraries and
+extracts only those functions used by the program, adding them to the
+compiled program.  There  are libraries for  I/O functions, 
+string handling,  math functions, and so on. To use the  standard
+input/output  runtime  library,  the  standard  input/output header
+file, {\fn stdio.h}\index{stdio.h@{\fn stdio.h}}, must be included in 
+the source file using:
+\begin{code}
+ \#include  <stdio.h>
+\end{code}
+\noindent
+ This provides access  to numerous  functions.  Two of
+the most powerful (although their full power will only
+become apparent later) are {\cd printf} 
+\index{printf@{\cd printf}}for output and {\cd scanf}
+\index{scanf@{\cd scanf}}for input.  
+
+{\cd printf} takes at least one argument -- a string enclosed in
+quotes. This is the string which {\cd printf} prints.  However,
+within this string we can use {\cd \%d} to represent a place to
+print  an integer in decimal,  and {\cd \%c}  to represent a place to
+print a character. The appropriate variables  or constants  must
+then  be included  as arguments  to {\cd printf}, in the correct 
+order. For example,  assuming {\cd x} has value 3, {\cd y}
+has value 27, and {\cd c} has value {\cd '*'}, then
+ \begin{display}\cd
+\begin{tabular}{@{}ll@{}}
+ {\rm\bf The call:}           &          {\rm\bf will print:}\addVspace
+
+ printf("Hello\verb+\+n");               &  Hello \\ 
+ printf("\%d+\%d=\%d\verb+\+n",x,y,x+y); &  3+27=30 \\
+ printf("x+\%d=\%d\verb+\+n",5,x+5);     &  x+5=8 \\
+ printf("\%cc\%c\verb+\+n",c,c);         &  *c*
+\end{tabular}
+\end{display}
+\noindent
+Note the  use of  {\cd \verb+\+n} ({\em newline}) to indicate
+that the line printed is to be terminated by  a line  feed. Several 
+such {\kc escape  characters}\index{escape characters}  are  available, namely:
+\begin{display}   
+\begin{tabular}{@{}ll@{}}   
+          {\cd \verb+\+b}   & backspace \\
+          {\cd \verb+\+f}   & form feed \\
+          {\cd \verb+\+n}   & newline \\
+          {\cd \verb+\+r}   & carriage return \\
+          {\cd \verb+\+t}   & tab \\
+          {\cd \verb+\+'}   & single quote \\
+          {\cd \verb+\+"}   & double quote \\
+          {\cd \verb+\+\verb+\+}   & backslash \\
+          {\cd \verb+\+0}   & ASCII null (0)
+\end{tabular}
+\end{display}
+\noindent
+{\cd scanf} is  very similar  in form  to {\cd printf}.  For the 
+time being we will restrict ourselves  to two  forms, namely to  read
+single integer  and  character variables respectively. The
+simplest such forms are:
+\begin{code}
+ scanf("\%d",\&{\ms integer\_variable\_name\/}); \\
+ scanf("\%c",\&{\ms character\_variable\_name\/});
+\end{code}
+\noindent
+The use  of the  ampersand ({\cd \&})  before the variable names
+will become clear later.
+
+Let us consider a simple program to illustrate these concepts:
+\begin{code}   
+ \#include <stdio.h> \\
+ /* Square/Cube Example 1 */ \addVspace
+
+ main() \\
+ \{ \+\\
+   int x, x\_sq; \addVspace
+
+   printf("Please enter a number\verb+\+n"); \\
+   scanf("\%d",\&x); \\
+   x\_sq = x*x; \\
+   printf("\%d squared is \%d, cubed is \%d\verb+\+n", x, x\_sq, x*x\_sq); \-\\
+ \}
+\end{code}
+\noindent
+ All input  and output is done from and to files. The standard I/O
+library provides three special files, called 
+{\cd stdin}\index{stdin@{\cd stdin}}, {\cd
+stdout}\index{stdout@{\cd stdout}} and {\cd stderr} 
+\index{stderr@{\cd stderr}} (standard input, output, and  error files, 
+respectively).  Under normal circumstances the  {\cd stdin} file is
+the keyboard, and {\cd stdout} and  {\cd stderr} are  the screen.
+{\cd printf} always prints to  {\cd
+stdout}, while  {\cd scanf} reads  from {\cd stdin}.  {\cd stderr}
+is  used for  error messages.
+
+  UNIX allows  us to read from and write to data files, simply by using 
+{\kc I/O redirection}\index{redirection of I/O} 
+\index{stdin@{\cd stdin}!redirection}
+and {\cd stdout}\index{stdout@{\cd stdout}!redirection}.
+When  we execute  a compiled  program
+(by typing its name) we can specify whether  to redirect the source of the
+input, or  redirect the destination of the output, as follows:
+\begin{display}
+\begin{tabular}{@{}ll@{}}   
+\cd > {\ms file} & Create {\ms file\/} and use it for {\fn stdout} output. \\
+\cd < {\ms file} & Take {\fn stdin} input from {\ms file}. \\
+\cd >> {\ms file}\tab & Append {\fn stdout} output onto the end of {\ms file}.
+\end{tabular}
+\end{display}
+Thus, if  we wanted  {\cd printf}  to print  to a  file called
+{\fn progout} and {\cd scanf} to read from a file called {\fn
+progin}, we could for example use:
+\begin{display}\cmd
+a.out  {\cd <}progin {\cd >}progout
+\end{display}
+\noindent
+If we wanted to send the output to both the screen and the file, we
+could use the UNIX {\cmd tee}, as follows:
+\begin{display}\cmd
+a.out  {\cd <}progin {\cd |} tee progout
+\end{display}
+
+\subsection{Passing Arguments to Functions}
+\index{arguments}
+
+Our use of {\cd printf} above illustrates calling a function with
+arguments. To define a  function with  arguments in  C, we  must list
+the argument names, in order, in  the {\kc formal  parameter list} 
+\index{arguments!formal}
+(parameter=argument) which  follows the function name.  This must 
+immediately be followed by the type declarations of the arguments. 
+The order  of the arguments\index{arguments!order of} in the argument list is important, as the
+same order must be used when calling the function, but the order of
+the declarations \index{declarations!order of}is  unimportant. For  example, say we wanted to
+print the squares and cubes of the first five integers. We could use:
+\begin{code}   
+/* Square/Cube Example 2 */ \addVspace
+   
+ main() \\
+ \{ \\
+  \>  doline(1); doline(2); doline(3); doline(4); doline(5); \\
+ \} \addVspace
+   
+ doline(num) \\
+ \> int num; \\
+ \{ \\
+  \> printf("\%d\verb+\+t\%d\verb+\+t\%d\verb+\+n", num, num*num, num*num*num ); \\
+ \}
+\end{code}
+\noindent
+ (Note: from  now on,  we  will  omit  the  {\cd \#include  <stdio.h>}
+from  our examples, and assume it is always present).
+
+  All arguments in C are {\kc passed by value}\index{arguments!passed by value}. In other words,
+only the value of the argument  is passed  to the function. Upon
+entry to the function, space is allocated for the formal parameters,
+and these are initialised with the passed values. Using  a variable
+as an argument in a function call will not result in the variable's
+value being changed, even if the formal argument changes within the
+function. Thus, executing:
+\begin{code}
+ main() \\
+ \{ \\
+	\> int x; \\
+	\> x = 5; \\
+	\> addone(x); \\
+	\> printf("\%d\verb+\+n",x); \\
+	\} \addVspace
+
+ addone(n) \\
+ \> int n; \\
+ \{ \\
+  \> n = n+1; \\
+ \}
+\end{code}
+\noindent
+ will print  the result  5, not 6. When the function is exited,
+the values of the formal arguments are simply discarded.
+
+\subsection{Returning Values from Functions}
+
+\index{functions!returning values}
+     We saw  earlier how  to  use  preprocessor  macros  to  implement
+simple functions, such as squaring and cubing numbers. We can do this
+with functions, as follows:
+\begin{code}   
+ /* Square/Cube Example 3 */ \addVspace
+
+ square(n) \\
+ \> int n; \\
+ \{ \\
+ \> return n*n; \\
+ \} \addVspace
+
+ cube(n) \\
+ \> int n; \\
+ \{ \\
+  \> return n*n*n; \\
+ \} 
+\end{code}
+\noindent
+     The {\cd return} statement \index{statements!return@{\cd return}}causes 
+the containing function to be
+exited, and the function call effectively to be ``replaced''  by the 
+returned value. We could call the above functions in different ways,
+for example:
+\begin{code}
+ x\_sq = square(x); \\
+ printf("\%d cubed is \%d\verb+\+n", n, cube(n)); \\
+ square(2);
+\end{code}
+\noindent
+     In the last example, the function will be called, and the value
+4 will be returned. However,  as we  are not  using the  value
+returned by the function, this value will simply be discarded.  It
+turns  out that  this may  happen often.  Unless told otherwise, C
+expects  all functions  to return an  integer, and  reserves space 
+for this. This is  fine when  we are returning an integer, but there
+are two other cases: we may not want to return any value, or we may
+want to return a type other than integer.
+
+     These problems are easily solved: we simply have to declare
+the type of the function. For example:
+\begin{code}          
+ \#define   PI   3.1415927 \addVspace
+
+ float circumf(radius) \\
+ \> float radius; \\
+ \{ \\
+ \>   return 2*PI*radius; \\
+ \}
+\end{code}
+\noindent
+     C provides  a special  type, {\cd void},  to solve  the first  
+problem. A  {\cd void} function is one which returns no value. For
+example, our {\cd doline} function could be written:
+\begin{code}
+ void doline(n) \\
+ \> int n; \\
+ \{...\}
+\end{code}
+\noindent
+     The advantages  of using {\cd void} are firstly that you are
+explicitly stating that no  return value can be expected from the
+function, and secondly, you save time and  space by  not allocating 
+any unnecessary space and returning arbitrary values (which  is
+what  happens if  you don't  specify {\cd void} and don't return a
+value).
+
+     A limitation  of {\cd return} is that you can only return a
+single value from a function. Some  languages allow  you to call a
+function and pass the arguments 
+{\kc by reference}\index{arguments!passed by reference},  that is, passing
+the addresses of variables rather than just their values. This
+allows the function to affect the variable values directly.  While
+all  C calls  are  by  value, there is a way to effectively make
+calls by reference, which we will examine shortly.
+

@@ -1,0 +1,451 @@
+\cleardoublepage
+\chapter{The Run-Time Libraries}
+\index{libraries}
+     In the previous chapters we have  examined  the whole  of the  C
+language.  However, as mentioned before,  C provides  a large  number
+of functions in  the  {\kc run-time libraries\/} which  can be used
+to simplify programming tasks. Under UNIX there are numerous
+libraries, many of which  are concerned only with UNIX system
+programming. We will rather focus on the five most common libraries,
+the {\kc standard input/output\/} library, the  {\kc string\/}
+library,  the {\kc character  function\/} library, the  {\kc storage
+allocation\/} library,  and the  {\kc maths\/} library.  To use these
+libraries, we must include special  system header  files which will
+give us access to them. These are:
+ \begin{display}
+\begin{tabular}{@{}ll@{}}
+     Standard I/O         & {\cd \#include <stdio.h>} \\
+     String functions     & {\cd \#include <string.h>} \\
+     Character functions  & {\cd \#include <ctype.h>} \\
+     Storage allocation   & predeclared by C compiler, else {\cd malloc.h} \\
+     Math functions       & {\cd \#include <math.h>}
+\end{tabular}
+\end{display}
+\noindent
+     We will deal with each of these, from the simplest to the most
+complex.
+
+
+\section{Character Processing Functions}
+\index{libraries!character processing functions}
+\index{functions!character processing}
+\index{character processing functions}
+     The  character   processing  functions   are  used  for
+classifying  and  converting characters. Each of these functions
+takes a single argument of type {\cd char}.  On some systems these
+functions are implemented as macros.  Be careful when using them with
+arguments that have side-efects, for example increment/decrement
+operators.  The most common functions
+are:
+\begin{hanglist}
+\hangitem{\cd isalnum(c)}
+          returns true if {\cd c} is an alphabetic or numeric
+          character.
+\hangitem{\cd isalpha(c)}
+          returns true if {\cd c} is an alphabetic character.
+\hangitem{\cd isdigit(c)}
+          returns true if {\cd c} represents a decimal digit.
+\hangitem{\cd islower(c)}
+          returns true if {\cd c} is a lower case letter.
+\hangitem{\cd isupper(c)}
+          returns true if {\cd c} is an upper case letter.
+\hangitem{\cd isprint(c)}
+          returns true if {\cd c} is printable (not a control
+		    character).
+\hangitem{\cd ispunct(c)}
+          returns true if {\cd c} is a punctuation character.
+\hangitem{\cd isspace(c)}
+          returns true if {\cd c} is a whitespace character (that is,
+          a space, horizontal or vertical tab, carriage return,
+          newline, or form feed character).
+\hangitem{\cd toint(c)}
+          returns the decimal value of a character representing a
+               hexadecimal digit.
+\hangitem{\cd tolower(c)}
+          returns {\cd c},  unless {\cd c} is an upper case letter,
+			 in which case the lower case equivalent is returned.
+\hangitem{\cd toupper(c)}
+          returns {\cd c},  unless {\cd c} is a lower case letter,
+			 in which case the upper case equivalent is returned.
+\end{hanglist}
+
+\section{String Handling Functions}
+\index{libraries!string handling functions}
+\index{strings!functions for handling}
+\index{functions!string handling}
+     All of  these functions  assume that  the strings passed as
+arguments are properly terminated  by  a  null byte.  In  the
+following  description,  all arguments whose  names begin  with {\cd
+s} are of type {\cd char*} (i.e.\ {\ms pointer to char\/}), all those
+beginning with {\cd c} are {\cd char}s, and all those beginning with
+{\cd n} are {\cd int}s.
+ \begin{hanglist}
+\hangitem{\cd char *strcat(s1,s2), \\
+       char *strncat(s1,s2,n)}
+ Append string {\cd s2} to string {\cd s1}, and return a pointer to the
+result. {\cd strncat} appends at most {\cd n} characters of {\cd s2}
+to {\cd s1}.
+
+\hangitem{\cd char *strchr(s,c), \\
+       char *strrchr(s,c)}
+  Return a pointer to the first (or last if {\cd strrchr}) occurrence
+of character {\cd c} in string {\cd s}.  A null pointer is returned if
+{\cd c} is not in {\cd s}.
+
+\hangitem{\cd int strcmp(s1,s2), \\
+              int strncmp(s1,s2,n)}
+ Compare the two strings and return {\cd 0} if they are equal, a
+negative value if {\cd s1} precedes s2 alphabetically, or a positive
+value otherwise.  {\cd strncmp} compares a maximum of {\cd n}
+characters.
+
+\hangitem{\cd char *strcpy(s1,s2) \\
+              char *strncpy(s1,s2,n)}
+ Copy string {\cd s2} to {\cd s1}, returning a pointer to the result. 
+{\cd strncmp} copies a maximum of {\cd n} characters.  Care should be
+taken if {\cd s2} is longer than {\cd s1}.
+
+\hangitem{\cd int strlen(s)}
+ Return the number of characters in {\cd s} up to but not including
+the terminating null byte.
+
+\hangitem{\cd int strpos(s,c), \\
+              int strrpos(s,c)}
+ Return the position of the first (or last, if {\cd strrpos})
+occurrence of the character {\cd c} in {\cd s}.  The first character
+in {\cd s} has position 0.
+\end{hanglist}
+Typical implementations of {\cd strcmp} and {\cd strcpy} are:
+\begin{code}
+strcmp(s,t)							\\
+\> char *s, *t;					\\
+\{ \+ 								\\
+	while( *s==*t )\{ \+			\\
+		if( *s==0 )return 0;		\\
+		++s;							\\
+		++t; \-						\\
+	\}									\\
+	return (*s-*t); \-			\\
+\}										\addVspace
+
+char *strcpy(s,t);				\\
+\> char *s, *t;					\\
+\{ \+									\\
+	char *d = s;					\\
+	while( *s++=*t++ );			\\
+	return d; \-					\\
+\}
+\end{code}
+\noindent
+
+
+\section{Mathematical Functions}
+\index{libraries!mathematical functions}
+\index{functions!mathematical}
+     The  mathematical   functions  provide   a  large   set  of
+mathematical operations, including  trigonometric and  hyperbolic
+functions,  and a  random number generator.  The large  number of
+these functions,  as  well  as  their (mostly) self-evident  names,
+makes it tedious to list them here. Consult your C/UNIX manuals (for
+example, the UNIX Programmer's Reference Manual volume 1 section 3)
+for details.
+
+\section{Storage Allocation Functions}
+\index{libraries!storage handling functions}
+\index{functions!for storage handling}
+     It is  possible to  allocate and deallocate memory from the
+system ``heap'' using these functions (which are predeclared by the C
+compiler, and hence need no {\cd \#include} file header). The
+functions are:
+\begin{hanglist}
+\hangitem{\cd char  *calloc(num,size) \\
+       unsigned num, size;}
+ Allocate enough memory to hold an array of {\cd num} elements
+of size {\cd size} bytes each, clear the memory to zeroes and
+return a pointer to the start. There is a variant {\cd clalloc},
+which takes {\cd unsigned long} arguments, used for allocating large
+areas of memory.
+
+\hangitem{\cd cfree(mem) \\
+       char *mem;}
+ Free (de-allocate) the memory pointed to by {\cd mem}, where
+{\cd mem} is a pointer returned by some previous {\cd calloc} call.
+
+\hangitem{\cd char *malloc(size) \\
+       unsigned size;}
+ Allocate {\cd size} bytes of memory, and return a pointer to the
+start. The memory is not initialised in any way, and must be
+assumed to contain garbage. A {\cd long} version, {\cd mlalloc}, is
+also available.
+
+\hangitem{\cd free(mem) \\
+       char *mem;}
+ same as {\cd cfree}, but for memory allocated by {\cd malloc}.
+
+\hangitem{\cd char *realloc(mem,size) \\
+       char *mem;	       \\
+       unsigned size;}
+ Change the size (without damaging the contents) of the previously
+allocated memory region pointed to by {\cd mem}.  Return a pointer to
+the result.  If this returned pointer is not the same as {\cd mem},
+then {\cd mem} was not a valid argument and should not be used).
+There is a {\cd long} version, {\cd relalloc}.
+
+\end{hanglist}
+
+\section{Standard Input and Output}
+
+     The standard  input/output header  file,  
+{\fn stdio.h}\index{stdio.h@{\fn stdio.h}},  defines
+some  useful macros and  variables for  use with input and output.
+These include an end of file marker,  {\cd EOF}\index{EOF@{\cd EOF}}, and a new type,
+{\cd FILE}\index{FILE@{\cd FILE}}, used for declaring  streams\index{streams}. A {\kc stream\/} can be a
+file  or some other producer or consumer of data, such as a keyboard
+or screen. In particular, {\fn stdio.h} declares three  file
+pointers\index{stdin@{\cd stdin}}\index{stdout@{\cd stdout}}\index{stderr@{\cd stderr}}:
+\begin{code}
+extern FILE *stdin, *stdout, *stderr;
+\end{code}
+\noindent
+     which represent  the standard streams for use by functions such
+as {\cd printf} and {\cd scanf},  and system  error messages.  All
+of  our examples so far have used {\fn stdin} and {\fn stdout}, which
+can be easily redirected by UNIX to almost any stream.  This is
+inadequate, however, if we need more than just one file each for
+input and output. We can declare additional file pointers ourselves,
+and use them as arguments to input and output functions.
+
+     The following functions are for use with {\fn stdin} only:
+\begin{hanglist}
+\hangitem{\cd int getchar()}
+	Return the next character (or {\cd EOF}) from {\fn stdin}.
+
+\hangitem{\cd char *gets(s)   \\
+       char *s;}
+	Read characters from {\fn stdin} into the array pointed to by
+	{\cd s} until a newline or {\cd EOF} is encountered.  The newline is
+	discarded and the string is terminated with a null.  Return
+	{\cd s} if successful, otherwise null.
+
+\hangitem{\cd int scanf(f,{\ms list\_of\_pointers\/}) \\
+       char *f;}\index{scanf@{\cd scanf}}
+	Described previously.  Return the number of fields that were
+	assigned successfully.
+\end{hanglist}
+     The following functions are for use with {\bf stdout} only:
+\begin{hanglist}
+\hangitem{\cd int putchar(c)		 \\
+       char c;	}
+	Write the character {\cd c} to {\fn stdout}.  Return {\cd c} as
+	an {\cd int} if successful, {\cd EOF} otherwise.
+
+\hangitem{\cd int puts(s)		    \\
+       char *s;}
+	Write the string {\cd s} to {\fn stdout} and append a newline.  
+	Return a newline if successful, {\cd EOF} otherwise.
+
+\hangitem{\cd int printf(f,{\ms list\_of\_expressions\/}) \\
+       char *f;} \index{printf@{\cd printf}}
+	Described previously.  Return the number of characters actually
+	written if successful, a negative value otherwise.
+\end{hanglist}
+     All other  input and  output functions  take a  stream as an
+argument. To open and close streams, we use:
+\begin{code}
+       FILE *fopen(name,mode)		 \\
+       char *name,*mode;		 \addVspace
+
+       FILE *freopen(name,mode,stream)	 \\
+       char *name,*mode;		 \\
+       FILE *stream;			 \addVspace
+
+       int fclose(stream)		 \\
+       FILE *stream;
+\end{code}
+\noindent
+     {\cd fopen} opens the stream called {\cd name}, and returns a
+pointer to it. The {\cd mode} specifies what the stream is to be used
+for; it can be any one of:
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+       {\cd "r"}  &   open an existing file for input \\
+       {\cd "w"}  &   create a new file for output    \\
+       {\cd "a"}  &   create a new file for output or append to existing file \\
+       {\cd "r+"} &   open an existing file for input and output \\
+       {\cd "w+"} &   create a new file for input and output	  \\
+       {\cd "a+"} &   create a new file or append to an existing file, for
+                    input and output
+\end{tabular}
+\end{display}
+\noindent
+     {\cd freopen} is  similar, except  it calls  {\cd fclose} first.
+In other  words, it allows us  to associate  our stream  variable
+with  a different  stream using a single call  to {\cd freopen} rather
+than one to {\cd fclose} followed by one to {\cd fopen}. If an error
+occurs in attempting to open a file, both {\cd fopen} and {\cd
+freopen} return a null pointer (zero).
+
+     {\cd fclose} closes a stream. If any error occurs, it returns {\cd EOF}, otherwise it
+returns zero.
+
+     To check the status of a stream, we use:
+\begin{code}
+       int feof(stream) \\
+       FILE *stream;   \addVspace
+
+       int ferror(stream) \\
+       FILE *stream;	  \addVspace
+
+       void clearerr(stream) \\
+       FILE *stream;
+\end{code}
+\noindent
+     {\cd feof} checks  whether the  end of {\cd stream} has been
+reached, and returns true if  this is  the case,  false otherwise.
+{\cd ferror} returns true if the last read or  write operation  to
+{\cd stream} resulted in an error. {\bf clearerr} resets any
+such error indication on the stream.
+
+     The input and output operations on the streams are:
+\begin{code}
+       int getc(stream) \\
+       FILE *stream;	\addVspace
+
+       int fgetc(stream)   \\
+       FILE *stream;	       \addVspace
+
+       int ungetc(c,stream)	     \\
+       char c;				 \\
+       FILE *stream;			   \addVspace
+
+       char *fgets(s,n,stream)		 \\
+       char *s;				 \\
+       int n;				 \\
+       FILE *stream;			 \addVspace
+
+       int fscanf(stream,f,{\ms pointer\_list\/}) \\
+       FILE *stream;				\\
+       char *f;				       \addVspace
+
+       int putc(c,stream)		       \\
+       char c;				       \\
+       FILE *stream;			       \addVspace
+
+       int fputc(c,stream)		       \\
+       char c;				       \\
+       FILE *stream;			       \addVspace
+
+       int fputs(s,stream)			\\
+       char *s;					 \\
+       FILE *stream;				 \addVspace
+
+       int fprintf(stream,f,{\ms argument\_list\/})  \\
+       FILE *stream;				   \\
+       char *f;					   \addVspace
+
+       int fflush(stream)			   \\
+       FILE *stream;
+\end{code}
+\noindent
+     {\cd getc} and  {\cd putc} are macros, while {\cd fgetc} and {\cd
+fputc} are functions. These are the equivalent of {\cd getchar} and
+{\cd putchar} but for any stream. Similarly, {\cd fputs} and {\cd
+fgets} are  the equivalent  of {\cd puts} and {\cd gets}, but for any
+stream. One difference, however, is that the newline is not striped
+or appended as with {\cd gets} and {\cd puts} respectively.  
+The same goes for {\cd fprintf} and {\cd fscanf}. The only
+``new'' functions here are {\cd ungetc} and {\cd fflush}.
+
+     {\cd ungetc} attempts  to push  the character {\cd c} back into
+an input stream. Thus the next  call to {\cd getc} on that stream
+would return {\cd c}. This may not be possible -- if it is, {\cd c}
+is returned; otherwise {\cd EOF} is returned.
+
+     {\cd fflush} flushes the buffers associated with a stream. Most
+input and output in UNIX  is buffered and thus writing  to a  stream
+does  not mean  that  the  actual  device  or  file associated with
+that stream  will get  the output  immediately. For  example,
+terminal I/O  is buffered  on a line-by-line basis. The terminal does
+not send keyboard input  or print  screen output until it receives a
+character.  Say, however,  we wanted  to prompt for user input, and
+have the prompt appear immediately after  our message (in other
+words, we don't want a newline at the end of our message).  Using:
+\begin{code}
+printf("Please enter Y or N "); c=getchar();
+\end{code}
+\noindent
+     is not  good enough,  as the  message won't  be printed -- no
+newline has occurred. We can achieve the result we want with:
+\begin{code}
+printf("Please enter Y or N "); fflush(stdout); c=getchar();
+\end{code}
+\noindent
+     When we  are using  files  for  input  and  output,  we  need
+additional functions to  allow us  to move  around the  file, and  so
+on.  The  following functions are usually provided for this purpose:
+\begin{code}
+       int fread(buf,size,num,stream)	      \addVspace
+
+       int fwrite(buf,size,num,stream)	      \\
+       char *buf;			      \\
+       unsigned size;			      \\
+       int num;				      \\
+       FILE *stream;			      \addVspace
+
+       int fseek(stream,offset,type)	     \\
+       FILE *stream;			     \\
+       long offset;			     \\
+       int type;			     \addVspace
+
+       long ftell(stream)		     \\
+       FILE *stream;			     \addVspace
+
+       void rewind(stream)		     \\
+       FILE *stream;
+\end{code}
+\noindent
+     {\cd fread} and  {\cd fwrite} respectively reads  and writes
+blocks of binary data consisting of at most {\cd num}  items of  size
+{\cd size}  from/into the buffer pointed to by {\cd buf}.
+The number of items actually read or written is returned.  When
+reading binary blocks, we cannot use {\cd EOF} to tell if the end of
+the file has been reached; we must use {\cd feof} instead.
+
+     {\cd fseek} seeks to a position in the specified stream,
+allowing random access to the  stream. If  the seek  is successful,
+{\cd fseek}  returns  zero.    {\cd type} specifies to what {\cd
+offset} is  relative;  if {\cd type} is zero,  {\cd offset} is
+treated as  relative to  the beginning of the stream, if one, it is
+treated as relative to the current position, and if two, as relative
+to the end of the file.
+
+     {\cd ftell} returns  the current  position in  {\cd stream}.
+This can then later be used in calls to {\cd fseek} to restore this
+position.
+
+     {\cd rewind} sets  a  stream  back  to  the  beginning;  it  is
+equivalent  to the function call {\cd fseek(stream,0L,0)}.
+
+
+
+\section{Executing UNIX commands from C}
+
+     In UNIX  environments, it  is easy  to invoke  other commands or
+programs from yours  -- a function 
+{\cd system} \index{system()@{\cd system()} function}
+\index{UNIX!executing commands from programs}has been included in
+the runtime libraries for this. {\cd system}  takes a  string
+argument;  this argument  is passed  to the UNIX shell and  executed,
+after  which execution  of  the  program  continues.  For example, to
+print the date, you can simply say:
+\begin{code}
+system("date");
+\end{code}
+\noindent
+     All C environments should provide some way of invoking other
+programs and commands from  within programs.  If the {\cd system}
+function is not provided, a related  function called  {\cd exec} is
+probably  available. Check your system documentation under  {\em
+System Calls\/}  (for example,  UNIX Programmer's Reference Manual
+volume 1 section 2).
+

@@ -1,0 +1,668 @@
+
+\section{Pointers and Addresses}
+\index{pointers}
+\index{addresses}
+
+     Memory in the computer is accessed much like post boxes in a
+street: each unit of  memory (usually a byte made up of eight bits)
+has a unique numeric  {\kc address} which  can be  used to  access
+it. These addresses run sequentially, so,  for example, if the string
+{\cd "cat"} was in memory, the address of the  byte containing  the
+{\cd 'a'} would be one more or less than the address of the byte
+containing the {\cd 'c'}.
+
+     Most high  level languages hide this level of memory access, an
+exception being BASIC's  {\bf peek} and  {\bf poke}. C,  however,
+provides an elegant mechanism for this task.
+
+     We can  find the address of any variable or function by using the
+{\ms address-of\/}~({\cd \&})  operator, and  we can  access the
+contents of any address by using the {\ms contents-of\/}~({\cd *})
+operator\index{operators!indirection}. These two operations are complementary, and in fact the
+compiler  removes the  combination {\cd *\&}  wherever it  finds it.
+The reverse combination, {\cd \&*},  is meaningless,  as one  will
+then be attempting to find the address of  a value,  and not  of a
+variable; nonetheless, the compiler removes this combination too.
+
+     These operations open up a whole new world of types in C. For any
+type {\ms t\/}, we now  have the  type {\ms address  of object  of
+type  t\/}. Such  types are  called {\em pointer types}, as they
+effectively point to objects of other types.
+
+     Declaring a  pointer to  a type  {\ms t\/} in  C is  easy: we
+simply declare the variable as  if it  were of  type {\ms t\/},  but
+prefix its name with a {\cd *} to indicate that it is a pointer. The
+following example, though simple, will illustrate basic pointer
+usage:
+\begin{code}
+ main() \\
+ \{ \+ \\
+    int \=n, \tab \= /* an integer */ \\
+	 \>    *p;\> /* a pointer to an integer */ \\
+    n = 2; \\
+    p = \&n; \>\> /* p now contains the address of n */ \\
+    printf("\%d\verb+\+n",*p); \\
+    {*}p = 3; \\
+    printf("\%d\verb+\+n",n); \- \\
+ \}
+\end{code}
+\noindent
+     You should be able to see that the results this will produce are:
+\begin{code}
+2 \\
+3
+\end{code}
+\noindent
+     The {\ms contents-of\/}  operator has  a higher  precedence  than
+multiplication; thus, for example, the expression:
+\begin{code}
+a**b**c
+\end{code}
+\noindent
+ is grouped as:
+\begin{code}
+a*(*b)*(*c)
+\end{code}
+\noindent
+     We will now demonstrate one of the primary applications of
+pointers in C.
+
+
+
+\section{Passing Arguments by Reference}
+
+\index{arguments!passed by reference}
+     The main  advantage of pointers is that they allow us to alter a
+variable without knowing  what the  variable is,  just by  knowing a
+value, namely, the address of  the variable.  This means  we can 
+effectively pass  variables  by reference. Say  we want  to pass a
+variable of type {\ms t\/} by reference. Instead of passing the 
+variable, we  pass its  address.  For  the  corresponding  formal
+argument, we  declare a  {\ms pointer to  t\/}. Within the called
+function, we can now happily access  the  variable  (as  the  object 
+pointed  to  by  our  pointer argument). Let's see an example:
+suppose we want a function to return both the square and  the cube of
+a  number, in  two different variables. The following program
+illustrates this:
+\begin{code}
+ /* Square/Cube Example 4 */ \addVspace
+
+ void calculate(x,xs,xc) \\
+ \> int x, *xs, *xc; \\
+ \{ \+\\
+      {*}xs = x*x; \\
+      {*}xc = (*xs)*x; 
+		\-\\
+ \} \addVspace
+
+ main() \\
+ \{ \+\\
+      int n, n\_sq, n\_cb; \addVspace
+
+      scanf("\%d",\&n); \\
+      calculate(n, \&n\_sq, \&n\_cb); \\
+      printf("\%d\verb+\+t\%d\verb+\+t\%d\verb+\+n", n, n\_sq, n\_cb);
+		\-\\
+ \}
+
+\end{code}
+\noindent
+ This explains  why in  calls to {\cd scanf} we send the
+address of the variable to read and not the value.
+
+It should be clear that although we are effectively passing arguments by
+reference, we are in fact simply passing the {\em addresses} of these arguments
+by {\em value}. In other words, the ``arguments'' that are being passed by
+reference are not actually the arguments being passed at all. Remember, in C all
+arguments are passed by value; there are no exceptions to this rule. Thus we are simply achieving the effect of
+passing arguments by reference; we cannot really do so at all.
+
+     Pointers are  an  intrinsic  part  of  C,  as  will  become 
+increasingly apparent. A sound understanding of them is a key to
+mastering the language.
+
+\section{More about Basic Types}
+
+     So far  we have  only seen the basic C types such as {\cd int},
+{\cd float} and {\cd char}.  We will now introduce some further
+extensions to these basic types.
+
+     {\cd ints}\index{integers}  are  signed  integers,  
+usually  represented  with
+{\em 2's-complement representation}. The  actual range  of integers 
+allowed varies from machine to machine: on some, 16 bits are used to
+represent an integer, whereas others use 32 bits.  Most C compilers
+use 16-bit integers.  However, C allows  one to 
+specify the size of an integer variable explicitly with the two type
+specifiers\index{integers!short@{\cd short}}\index{integers!long@{\cd long}} 
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+  {\cd  short int} & 16-bit signed integer, and \\
+  {\cd long int}   &    32-bit signed integer
+\end{tabular}
+\end{display}
+\noindent
+     In each case, the keyword {\cd int} is optional.
+
+     Similarly, a {\cd float}\index{floating point numbers}  
+is usually represented by 32 bits.
+Should we wish to use double precision (64-bit) arithmetic, the type
+{\cd double} is provided.
+
+     Often we only need unsigned integers (for example, in  an
+execution profile). While an n-bit {\em signed\/} integer 
+\index{integers!signed@{\cd signed}}allows a
+numeric range of $(-2^{n-1}, 2^{n-1}-1)$,  an n-bit {\em unsigned\/}
+\index{integers!unsigned@{\cd unsigned}}integer allows $(0, 2^{n}-1)$.  
+To  specify  an unsigned type in C,
+we prefix the type with the keyword {\cd unsigned}, as in:
+\begin{code}
+unsigned short x;\\
+static unsigned float root;
+\end{code}
+\noindent
+     Care should be taken when mixing signed and unsigned types. The
+advantage of 2's  complement representation  is that  all arithmetic
+can be performed as though it  is unsigned.  The problem  that  this 
+introduces  though,  is  that overflows may  occur that will not be
+reported. If you are expecting output of negative numbers  and you 
+get positive  ones instead, or vice versa, you have probably mixed
+signed and unsigned types in an overflow situation.
+
+
+
+\section{Characters and String Constants}
+\index{constants!string}
+\index{constants!character}
+
+     We have  seen that  C provides  a character  type {\cd char}, 
+and that  string constants in  {\cd printf} and  {\cd scanf} calls
+are written  in double  quotes. C has a novel way  of handling 
+strings, which  is confusing at first but becomes very sensible once
+you properly understand it.
+
+     To fully  understand strings,  we must  discuss arrays,  as a 
+string is, essentially, an  array of  characters. However, as
+mentioned earlier, pointers figure greatly in C, and we shall soon
+see that arrays and pointers are almost identical in  C. Thus  we
+can  introduce the  basics of  C strings  using  the pointer concept.
+
+     When C  detects a  single quote,  it knows  that it is about to
+process a character constant. The character following the quote is
+the constant, and its ASCII (or  possibly other)  representation is
+used. In effect, then, character constants in C are actually just
+very short (8-bit) integers. In fact, when we read or  print a
+character, it is only the {\cd \%c} format specifier that tells C it
+must print  or read a character and not an ASCII value. A consequence
+of this is that we can, for example, quite happily perform arithmetic
+with C character variables. In  fact, this  is commonly  done --  for
+example,  if we  wished to convert an  integer variable  {\cd num}
+with  a value  from 0  to 9 into a character variable {\cd ch}
+representing the corresponding ASCII character, we could use:
+\begin{code}
+ ch = num + '0';
+\end{code}
+\noindent
+     {\bf Warning:} If  your system  does not use ASCII
+representation, you may not be able  to do this, as it is based on
+the assumption that character encodings of digits and letters run
+sequentially.
+
+     The following short program illustrates this idea:
+\begin{code}
+ main()  \\
+ \{ \+  \\
+   char c; \addVspace
+
+   printf("Please enter a lower case letter\verb+\+n"); \\
+   scanf("\%c",\&c); \\
+   printf("Char \%c has representation \%d\verb+\+n", c, c); \\
+   printf("Place in alphabet is \%d\verb+\+n", c-'a'+1); \\
+   printf("In upper case it is \%c\verb+\+n", c-'a'+'A'); 
+	\-\\
+\}
+\end{code}
+\noindent
+     Say we  enter {\cd 'f'}.  This has ASCII representation 102\@.
+The first {\cd printf} will thus print {\cd Char f has representation
+102}. Now, {\cd 'a'} has representation 97; thus the expression {\cd
+c-'a'+1}  has value 6, which is the position of {\cd f} in  the
+alphabet.  Adding {\cd 'A'} (ASCII 65) to {\cd c-'a'} (5) gives the
+result 70, which is the ASCII code for {\cd F}.
+
+     To illustrate a simple example of {\kc strings}, consider the call:
+\begin{code}
+ printf("Hello\verb+\+n");
+\end{code}
+\noindent
+     When C encounters a double quote, it knows it has found a {\kc
+string constant\/} (a string  being a  sequence of  zero or more
+characters). During compilation, all the string constants in a
+program are put in the {\bf .data} \index{data@{\bf .data}}section of the file (recall, in  UNIX,
+the  {\bf .data} section  holds the  initialised data  from  your
+program). Within  the program,  the string is replaced by its address.
+Thus, {\em a string constant  in C  is converted to a pointer to
+char}. In fact, all strings in C  are treated  as pointers  to char. 
+Furthermore, the first argument of a {\cd printf} or {\cd scanf} call
+must be a pointer to char. Thus we could write:
+\begin{code}
+ char *i,*o,ch; \addVspace
+
+ i = "Please enter a character\verb+\+n"; \\
+ o = "\%c"; \\
+ printf(i); \\
+ scanf(o,\&ch);
+\end{code}
+\noindent
+     C strings  are sequences  of characters  which are terminated by
+the ASCII character NUL (that is, a byte with value zero - we will
+refer to this character as the null character)\index{null character}.  This
+null is important, as it is the only way  C identifies  the end of
+the string. When using string constants, as we have  been until  now,
+the  null  byte  is inserted  automatically  by  the compiler.
+
+     We can  extend a  string constant  over more than one line in
+exactly the same way  as we did with preprocessor macros; that is, we
+end all but the last line with a backslash (\verb+\+).
+
+     Another point to note is that C pointers are usually similar to
+integers. Thus, if we  were to  print {\cd i}  or {\cd o}  above as
+numbers, we would get the addresses at which these  two string
+constants are stored. We can print the strings pointed to by using
+{\cd \%s} in {\cd printf} statements, for example:
+\begin{code}
+printf("Address is \%d, String at address is \%s\verb+\+n",i,i);
+\end{code}
+\noindent
+     {\cd \%s} is  also used for reading  strings with  {\cd scanf}.
+Note  that  the argument corresponding  to a  {\cd \%s} must  in
+either  case be  a pointer  to char, representing the start address
+of a null terminated string of characters.
+
+
+
+\section{Numeric Constants and Character Escapes}
+\index{constants!numeric}
+\index{constants!character}
+\index{character escapes}
+
+     Numeric constants in C are not restricted to decimal numbers: we
+can also use {\kc hexadecimal\/}  (base 16)  and {\kc octal\/} (base
+8) numbers.  Octal  numbers\index{octal numbers}\index{integers!octal}  are indicated by  a zero ({\cd 0}) 
+prefix and hexadecimal numbers 
+\index{hexadecimal numbers}\index{integers!hexadecimal}by a 
+{\cd 0x} prefix. Thus, the
+following represent the same numbers:
+\begin{display}
+{\cd 16} (decimal) \tab  {\cd 020} (octal) \tab {\cd 0x10} (hexadecimal)
+\end{display}
+\noindent
+     An integer constant can be followed immediately by an {\cd l} or
+{\cd L} to specify explicitly that  it is  of type  
+{\cd long}\index{integers!long@{\cd long}}\index{constants!long@{\cd long}}. 
+All floating point  constants are of type 
+{\cd double}\index{constants!double@{\cd double}}; thus this does
+not apply to them.
+
+     Octal numbers  are used  in C  to represent 
+characters as  well; this is particularly useful  for control codes.
+Within quotes, a backslash followed by a number  is taken  to be  a
+{\kc character  escape}. The  number is  interpreted in octal, and 
+can be  at most  377 (octal). For example, many terminals emit a beep
+when ASCII 7 (control-G) is printed. We could implement a beep macro
+as:
+\begin{code}
+\#define  BEEP   printf("\verb+\+7");
+\end{code}
+\noindent
+     Floating point  numbers  can  be  expressed  using either  decimal 
+or scientific notation. Some examples:
+\begin{display}\cd
+\begin{tabular}{@{}lll@{}}
+ 3.14159   &     3.14159e0  &    0.31415927e+1 \\
+ 31.415927e-1 &  0.31415927e1   &
+\end{tabular}
+\end{display}
+
+
+\section{More about {\cd printf}}
+\index{printf@{\cd printf}}
+
+  We have  seen that  the function {\cd printf} takes a string
+argument which may contain {\em conversion  specifiers} 
+\index{conversion specifiers!printf@{\cd printf}}such as {\cd
+\%d} to indicate the place and format for printing other  arguments.
+Everything  in the  control string  which is  not a valid conversion 
+specifier will  be printed.  The conversion  specifiers  are
+considerably more powerful than we have seen so far.
+
+     The general form of a {\cd printf} conversion specifier is:
+\begin{code}
+ \%$[$-$][$+$][$\ $][${\ms fieldwidth\/}$][$.$][${\ms decimal\_places}$]${\ms
+conversion\_chars}
+\end{code}
+\noindent
+     The square  brackets $[]$ indicate optional elements of the
+specifier, and are not  part of  the specifier  itself. The  optional
+{\cd -} indicates that  the result should  be printed left-justified
+(the default is right-justified). The optional {\cd +}  indicates
+that a sign should always be printed, even if the number is
+positive.  Alternatively, a  space indicates that a space should be
+printed before positive  numbers instead  of a  {\cd +} sign. If
+neither a {\cd +} nor a space is present, no character is
+printed before positive numbers.
+
+ {\ms fieldwidth\/}  specifies the field width, i.e.\ the {\em
+minimum\/} number of places to be used for printing. If the value to
+be printed occupies less places than {\ms fieldwidth\/} specifies,
+spaces are printed to  fill it up, otherwise the entire value is
+printed with no spaces.  If {\ms fieldwidth\/} begins with a zero,
+the print field is filled up with zeroes  instead of spaces. A {\cd
+*} can be used instead of a number, in which case the field width
+must be passed as an argument in {\cd printf}. For example:
+\begin{code} 
+printf("\%-*s",fw,str); 
+\end{code} 
+\noindent
+  will print the string pointed to by {\cd str} left justified in a
+field of width {\cd fw}.
+
+     The {\cd .}\ is used simply to separate the field width and decimal
+place numbers, and  is only  essential if we use a decimal place
+number. {\ms decimal\_places\/} indicates, for a {\cd float} or {\cd
+double}, the number of decimal places to be printed,  or, for  a
+string,  the number  of characters of the string to be printed. Thus:
+\begin{code}
+printf("\%.3s","January");
+\end{code}
+\noindent
+   will print {\cd Jan}.
+
+{\ms conversion\_chars\/} can be any of the following:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+     {\cd c}     &    character \\
+     {\cd d}     &    signed decimal integer \\
+     {\cd ld} or {\cd D} &  signed long decimal integer \\
+     {\cd u}       &  unsigned decimal integer \\
+     {\cd lu} or {\cd U} &  unsigned long decimal integer \\
+     {\cd o}       &  unsigned octal integer \\
+     {\cd lo} or {\cd O} &  unsigned long octal integer \\
+     {\cd x}       &  unsigned hexadecimal integer \\
+     {\cd lx} or {\cd X} &  unsigned long hexadecimal integer \\
+     {\cd f}       &  decimal float or double \\
+     {\cd e}       &  scientific (exponent) float or double \\
+     {\cd g}       &  shortest of {\cd e} or {\cd f} \\
+     {\cd s}       &  string
+\end{tabular}
+\end{display}
+\noindent
+ {\cd printf} returns the number of characters printed (including the
+terminating null), or a negative value if an output error was
+encountered.
+
+\section{More about {\cd scanf}}
+\index{scanf@{\cd scanf}}
+
+     {\cd scanf} has  a format  very  similar to {\cd printf}.  The
+control  string is now interpreted as  specifying the  format of the 
+{\em input}.  Any  spaces,  tabs  or newlines in  this string  are
+ignored:  C expects  such characters  (known  as {\kc whitespace
+characters})  to separate  the input  items anyway,  so they are not
+needed. Any  characters  in  the  control  string  other  than 
+whitespace  or conversion specifiers  are expected  to be  found as 
+well. As an example, the call:
+\begin{code}
+scanf("\%d,\%d", \&num1, \&num2);
+\end{code}
+\noindent
+     when given the input:
+\begin{code}
+23,7
+\end{code}
+\noindent
+     will return with {\cd num1} set to 23 and {\cd num2} set to 7.
+However, the input:
+\begin{code}
+23 7
+\end{code}
+\noindent
+     will result  in {\cd num1}  being set  to 27, after which {\cd
+scanf} will find the 7 instead of  the comma,  and will  terminate.
+Thus no value will have been read for {\cd num2}.  If we  had left 
+out the  comma from the control string, the second case would be
+fine, but the first case wouldn't, for the same reason as above. 
+{\cd scanf} returns the number of arguments successfully read, so we
+can test for such cases.
+
+Conversion specifiers \index{conversion specifiers!scanf@{\cd scanf}}in 
+{\cd scanf} control strings have the
+following form:
+\begin{code}
+\%$[$*$][${\ms fieldwidth\/}$]${\ms conversion\_chars}
+\end{code}
+\noindent
+     The optional  {\cd *} indicates  that the  specified  input  is 
+simply  to  be skipped, that  is, that there is no corresponding
+address in the argument list to {\cd scanf}. This is useful for
+skipping over data items in the input that we are not interested  in
+(for  example, when  we are reading from a file of records, rather
+than  the keyboard,  and are  only interested  in some  fields  of 
+the records).
+
+     Here {\ms fieldwidth\/}  specifies the {\em maximum\/} length
+of the specified item.  If we are reading a string with a field
+width of 10, for example, {\cd scanf} would stop reading the  string
+the  moment it  had successfully  read 10  characters. The conversion
+characters for {\cd scanf} are:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+          {\cd c}       &  read a character \\
+          {\cd h}       &  read a short integer in decimal \\
+          {\cd d}       &  read an integer in decimal \\
+          {\cd ld} or {\cd D} &  read a long integer in decimal \\
+          {\cd o}       &  read an integer in octal \\
+          {\cd lo} or {\cd O} &  read a long integer in octal \\
+          {\cd x}       &  read an integer in hexadecimal \\
+          {\cd lx} or {\cd X} &  read a long integer in hexadecimal \\
+          {\cd f}       &  read a float in decimal \\
+          {\cd lf} or {\cd F} &  read a double in decimal \\
+          {\cd e}       &  read a float in scientific notation \\
+          {\cd le} or {\cd E} &  read a double in scientific notation \\
+          {\cd s}       &  read a string
+\end{tabular}
+\end{display}
+\noindent
+     Note that if we are specifying a type {\ms t\/} in the control
+string, there must be a  corresponding argument in the argument list
+of type {\ms pointer to\/} (that is, {\ms address of\/}) {\ms t}.
+
+
+\section{Arrays and String Variables}
+\index{arrays}
+
+     An {\kc array\/}  is an  ordered collection of data items (array
+elements) of the same type  (the type  of the  array).  A 
+particular  element is  accessed  by specifying the collective array
+name and the particular position (array index) of the  element within
+the ordered collection. Array indices in C always start at zero.
+
+     To declare an array of type {\cd t\/}, with {\cd n} elements,  we
+use the form:
+\begin{code}
+t  {\ms arrayname\/}[n]
+\end{code}
+\noindent
+     The elements of the array can then be accessed individually as:
+\begin{code}
+{\ms arrayname\/}[0],  {\ms arrayname\/}[1], \ldots,  {\ms arrayname\/}[n-1]
+\end{code}
+\noindent
+     We have  already come  across one type of array, namely 
+strings.  Although we only  used string  constants, we  can have 
+string variables \index{variables!string}\index{strings} as well!
+such variables are  arrays of type {\cd char}.
+
+     C uses  an ASCII  null (0) to indicate the end of a string. 
+This is the only way that the end of a string is indicated.
+Thus, to store the string  {\cd "cat"} in  a string  variable (that
+is, a {\cd char} array) would require an array size of  at least  4.
+
+
+\section{Pointer and Array Equivalence}
+\index{pointers!and array equivalence}
+\index{arrays!and pointer equivalence}
+
+     One cannot  assign a string to  an array,  only to a pointer.
+Thus  the following is not correct and should be rejected by most
+compilers:
+\begin{code}
+char  name[10];\\
+name = "P. Smith";
+\end{code}
+\noindent
+     Older compilers might not report  an error, even though something
+disastrous may have occurred here.  It is instructive to examine in detail
+what might happen.
+
+An array declaration results in two actions:
+ \begin{itemize}
+\item space is reserved for the array in memory, and
+\item the  array name is changed into a constant of type
+{\ms pointer to t\/} (where {\ms t\/} is the array element type), and is
+set to the address of the reserved space.
+\end{itemize}
+ In other words, the declaration  of {\cd name}  in our incorrect
+example reserves 10 bytes of  storage  and  associates  the address
+of  this storage with the identifier {\cd name}.  However, the
+assignment attempts to change the value of the pointer {\cd name}
+(which is supposed to be the address of 10 bytes in the {\bf .bss}
+section) to the address of the string {\cd "P. Smith"} in the {\bf
+.data} section.  The only way the program has access to the 10 bytes
+of storage set aside in the {\bf .bss} section, is through the
+address held in {\cd name}.  If this is now changed, the storage will
+be lost forever to our program.
+
+     The essential  point here  is that C converts a declaration of
+type {\ms array of t\/}  into one of a constant of type {\ms pointer
+to t}. The only real difference is that an array declaration (unless 
+it is  external or a formal function argument, see later) reserves
+some  storage. In particular, if we do not specify the array size, we
+have just declared a pointer; that is, the declarations  {\cd t 
+n[];} and {\cd t *n;} are equivalent. This equivalence extends far,
+as we shall see next.
+
+\section{String Functions}
+\index{strings!functions for handling} 
+\index{functions!string handling}
+
+If strings can only be assigned to pointers, then how are values
+assigned to string variables?  C provides a set of
+functions specifically for string manipulation in the  run-time
+libraries. To use these functions, the header file for the string
+library must be included, using
+\begin{code}
+\#include <string.h>
+\end{code}
+\noindent
+     For now, the most important functions are:
+\begin{display}
+\newlength{\tmpL}\settowidth{\tmpL}{\cd strcpy(s1,s2)}
+\begin{tabular}{@{}lp{.6\textwidth}@{}}
+    \parbox[t]{\tmpL}{\cd
+     strcpy(s1,s2)\\
+     char *s1,*s2;  }  &  Copies string {\cd s2} to string {\cd s1}.\\
+ & \\ 
+    \parbox[t]{\tmpL}{\cd
+     strlen(s1)\\
+     char *s1;      }  &  Returns the length of string {\cd s1}.\\
+ & \\ 
+    \parbox[t]{\tmpL}{\cd
+     strcmp(s1,s2)
+     char *s1,*s2;  }  & Returns 0 if the strings are equal, a
+                         negative number if {\cd s1} is less than {\cd s2},
+                         and a positive number otherwise.
+\end{tabular}
+\end{display}
+\noindent
+     The last  function, {\cd strcmp}  (string compare),  can be 
+used for  equality tests and for alphabetic ordering. ``Less'' here
+is taken to mean ``comes before, alphabetically.''  Since string 
+assignment is  possible  using  {\cd strcpy},  our earlier
+error could now be corrected with
+\begin{code}
+char  name[10];\\
+strcpy(name,"P. Smith");
+\end{code}
+\noindent
+     We can then access the  letters of the name by selecting elements of
+the {\cd char} array. More specifically:
+\begin{display}\cd
+\begin{tabular}{@{}lll@{}}
+ name[0] {\rm is} 'P' & name[1] {\rm is} '.' & name[2] {\rm is} ' ' \\
+ name[3] {\rm is} 'S' & name[4] {\rm is} 'm' & name[5] {\rm is} 'i'	 \\
+ name[6] {\rm is} 't' & name[7] {\rm is} 'h' & name[8] {\rm is} '\verb+\+0'
+\end{tabular}
+\end{display}
+
+\section{Pointer Arithmetic}
+\index{pointers!arithmetic}
+
+     We mentioned  earlier that  pointers are  usually stored  as
+integers\footnote{The exception is when sizes of integers and
+pionters are different, e.g.\ 16-bit integers and 32-bit pointers. 
+This is system dependent.}.  This means  we  can  perform  arithmetic 
+on  them. However,  C  performs  pointer arithmetic  slightly  
+different to   normal  arithmetic.   All  arithmetic operations are
+automatically scaled  by the  size of the type to which is being
+pointed.  In fact, C provides an operator, 
+{\cd sizeof}\index{sizeof@{\cd sizeof}}, 
+which can be
+applied to any variable or type name, and  will return the number of
+bytes occupied by that variable or a variable of that type. If {\cd
+n} represents an integer, and {\cd p1} and {\cd p2} are pointers,
+pointer arithmetic can thus be defined as 
+ \begin{display}\cd
+\begin{tabular}{@{}ll@{}}
+  {\rm\bf Expression}   &   {\rm\bf Is equivalent to} \addVspace
+          p1+n                &     p1+n*sizeof(*p) \\
+          p2-n                &     p2-n*sizeof(*p) \\
+          p1-p2               &     (p1-p2)/sizeof(*p1) 
+\end{tabular}
+\end{display}
+\noindent
+     The last  case is  only defined  when the  two pointers  are
+pointing  at different elements  of the  same array.  The difference 
+is then the number of array elements between them.
+
+     Note that  we apply  {\cd sizeof} to  the item pointed to, and
+not to the pointer.  This is  because the  size of  the pointer  is
+independent of the object being pointed to, and we are interested in 
+the size of the object being pointed to. A similar point (no pun
+intended) applies to
+arrays -- applying {\cd sizeof} to an array name will not return the
+size of an array element, but  rather the size of the entire  array.
+An important point is that all  {\cd sizeof} operations are evaluated
+by  the compiler, and  not  by  the running program.
+
+   The use  of pointer  arithmetic extends the equivalence  of arrays  and
+pointers. In particular, if we declare:
+\begin{code}
+t    a[n];
+\end{code}
+\noindent
+     where {\cd t} is some type, then the following two expressions are equivalent, and either can
+be used:  
+\begin{code} 
+*(a+i)    \\ 
+a[i] 
+\end{code} 
+\noindent
+     The value {\cd 0} has a special meaning to pointers. It is often
+defined as the macro {\cd NULL} \index{pointers!null pointer}\index{NULL}in 
+{\fn stdio.h}, and indicates that
+the pointer points to nothing.  When a C program is run, the first
+few bytes from address 0 usually have a signature value assigned to
+them. At the end of the program, this value is checked, and if it has
+changed, the error ``NULL pointer assignment'' is reported.
+

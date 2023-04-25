@@ -1,0 +1,667 @@
+\cleardoublepage
+\chapter{The {\cmd vi} Visual Editor}
+\index{vi@{\cmd vi}}
+When you use {\cmd vi} to edit a file, it makes a copy of the file
+(if it exists)  in its  own  work  buffer.  If you want to keep the
+changes which  you make  during a  {\cmd vi} session,  you must  save
+the work buffer contents before you leave {\cmd vi}.
+
+   {\cmd vi} operates in two modes, {\kc insert mode\/} (everything
+typed is treated as text to be  put in  the file)  and {\kc command 
+mode\/} (everything  typed is treated as a command to  {\cmd vi}).
+Certain  commands cause a switch from command to insert mode; to
+switch from insert mode to command mode, you simply hit the \ESC\
+key.
+
+   {\cmd vi} commands  mostly consist  of letters.  The case is
+important; upper case and lower case commands typically represent
+different but related operations.  In the rest of this chapter, we
+use the following notation:
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+\CR & denotes the carriage return, or enter key. \\
+\CTRL{\ms key\/} & denotes the {\cd Ctrl} key pressed while pressing
+{\ms key}.\\
+\ESC & denotes the escape key.
+\end{tabular}
+\end{display}
+\noindent
+Note: not all the commands described in this chapter may work on your
+terminal exactly as described here.  The outcome of some commands are 
+dependent on the terminal settings currently in use.
+
+
+\section{Entering and Leaving {\cmd vi}}
+\index{vi@{\cmd vi}!entering and leaving}
+   To enter {\cmd vi}, you type:
+\begin{display}\ms
+{\cmd vi} list\_of\_filenames
+\end{display}
+\noindent
+ where {\ms list\_of\_filenames\/} is optional.   This will  read the
+first file in the list (if there is one)
+into the work buffer and display the  first screenful  of lines  from
+this  file in command mode.  If the file does not exist, it will be
+created as an empty work buffer.
+
+  If there  are not enough lines to fill up the screen, {\cmd vi} will
+indicate the lines that  don't exist by printing  tildes \verb+~+.
+
+     If more than one file name has been specified, you can edit  the
+next file in the list by typing {\cd :n}.
+
+     The most common way of leaving {\cmd vi} is by entering {\cd ZZ}
+in command mode. This causes the  contents of the work buffer to be
+saved back to the original file.     Other  commands to leave {\cmd
+vi} are the following:
+ \begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+   {\cd :q}\CR &  quit without overwriting the file, but only if the work 
+						buffer has been saved or has not been changed. \\
+   {\cd :q!}\CR & quit regardless of the state of the work buffer.\\
+   {\cd :wq}\CR & write the work buffer to the file and then quit.
+\end{tabular}
+\end{display}
+\noindent
+   The colon  {\cd :} indicates to {\cmd vi} that you wish to use an
+extended command. When you enter  a colon,    the  cursor moves to
+the bottom of the screen, allowing you to  enter the command. You 
+must terminate  an extended  command  with  a \CR.  In the rest  of
+this chapter we will not show the \CR\ at the end of extended
+commands -- the {\cd :} at the start of the commands should be enough
+to remind you that you have to terminate the command with a \CR.
+
+   Many {\cmd vi}  commands are immediate commands.  Such a command is
+not displayed and takes effect immediately  -- no \CR\ is necessary.
+
+   The bottom  line of  the screen is a status line. It is used
+for displaying error messages, extended commands, file information,
+and so on.
+
+   The rest  of the  screen acts as a  window on the file being
+edited, showing you the contents of part of the file.
+
+
+\section{Moving the Window and Cursor}
+\index{vi@{\cmd vi}!moving around}
+   The window  movement commands  are immediate  commands using
+control codes:  that is,  you hold down the {\cd Ctrl} key on the
+keyboard and press the appropriate letter. Basic  window
+movement commands are:
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+  \CTRL{\cd F} & move the window forward (down) by one screen        \\
+  \CTRL{\cd D} & move the window forward (down) half a screen \\
+  \CTRL{\cd B} & move the window backward (up) by one screen       \\
+  \CTRL{\cd U} & move the window backward (up) by half a screen 
+\end{tabular}
+\end{display}
+\noindent
+     The  cursor may  be moved within the  window, with the following
+cursor movement commands:
+\begin{display}
+\begin{tabular}{@{}lp{.7\textwidth}@{}}
+  {\ms space}      &  move one character to the right \\
+  {\ms backspace}  &  move one character to the left \\
+  {\cd 0}      &  move to start of the current line \\
+  \CR     &  move to the first non-blank character of the next line \\
+  {\cd +}            &  same as \CR \\
+  {\cd -}  &  move to the first non-blank character of the previous line \\
+  {\cd \$}            &  move to end of current line \\
+  {\ms line\/}{\cd G} &  move to start of specified line (the
+									default is the last line in the file)\\
+  {\cd H}            &  move to top of screen \\
+  {\cd M}            &  move to middle of screen \\
+  {\cd L}            &  move to bottom of screen \\
+  {\cd w}            &  move to start of next word or punctuation mark \\
+  {\cd W}            &  move to start of next blank delimited word \\
+  {\cd b}            &  move to start of previous word or punctuation mark \\
+  {\cd B}            &  move to start of previous blank delimited word \\
+  {\cd e}            &  move to end of next word or punctuation mark \\
+  {\cd E}            &  move to end of next blank delimited word \\
+  {\cd (}            &  move to start of previous sentence \\
+  {\cd )}            &  move to start of next sentence \\
+ {\cd \{}            &  move to start of previous paragraph \\
+ {\cd \}}            &  move to start of next paragraph \\
+  {\cd k}            &  move up one line \\
+  {\cd l}            &  move right one character \\
+  {\cd j}            &  move down one line \\
+  {\cd h}            &  move left one character
+\end{tabular}
+\end{display}
+\noindent
+     The usual  cursor control  keys can be used for moving left or
+right by a single character and up or down by a single line (that is,
+they are treated as if they were {\cd h}, {\cd j}, {\cd k} and {\cd l}).
+
+\section{Moving by Context Searching}
+\index{vi@{\cmd vi}!searching}
+   If you enter a slash {\cd /} in command mode, the cursor moves to the
+status line and you can enter a  search pattern followed by \CR.  All
+lines from (but not including) the current line will then be searched
+for the specified pattern and the cursor will be positioned at the
+first string that matches the pattern.   If the  search reaches the
+end of the file, it will ``wrap around'' (continue from the
+beginning) to the starting position.  The last search pattern is
+reused if no pattern is given, (i.e.\ if you just type {\cd /}\CR).
+
+Alternatively     the   next occurrence of the last
+specified search pattern can be found by using the immediate commands:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+          {\cd n}   &  repeat last pattern search  \\
+          {\cd N}   &  repeat last pattern search, but in opposite direction 
+\end{tabular}
+\end{display}
+\noindent
+     To search backwards instead of forwards,  use {\cd ?} instead
+of {\cd /}. 
+
+\subsection{Search Patterns}
+\index{vi@{\cmd vi}!search patterns}
+   Search patterns  consist of  strings  of  characters,  with  the 
+following special notations:  
+\begin{display} 
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+    \caret         & represents the start of a line \\
+    \verb+$+         & represents the end of a line \\
+    \verb+\<+        & matches the beginning of a word \\
+    \verb+\>+        & matches the end of a word \\
+    \verb+.+         & matches any single character \\
+    \verb+*+         & matches any sequence of zero or more characters \\
+    \verb+[]+        & allows character ranges to be specified \\
+    \verb+\t+        & represents a tab \\
+    \verb+\b+        & represents {\ms backspace} \\
+    \verb+\\+        & represents \verb+\+ \\
+    \verb+\+\CR & represents a newline character \\
+    \verb+\^+        & represents a caret \caret \\
+    \verb+\:+        & represents a colon : \\
+    \verb+\$+        & represents a dollar sign \$ \\
+    \verb+\[+        & represents a left square bracket {\cd [} \\
+    \verb+\*+        & represents an asterisk * \\
+    \verb+\/+        & represents a slash {\cd /} 
+\end{tabular}
+\end{display}
+\noindent
+   The square  brackets {\cd []}  are used  to represent a single
+character within a given range. The characters can be listed
+explicitly, or given as a range. For example, {\cd [abcdefg]}  and
+{\cd [a-g]}  each match a single letter in the range {\cd a} to {\cd
+g}, while {\cd [aeiou]} matches any single vowel.
+
+\subsection{Matching Parentheses in Programs}
+\index{vi@{\cmd vi}!matching parentheses}
+     A useful command for editing programs is the  parenthesis match
+command {\cd \%}.  By positioning  the cursor  on a parenthesis or
+brace, and using this command, the matching  parenthesis or brace
+will be temporarily highlighted (or depending on your terminal type,
+the cursor may be positioned on the matching parenthesis/brace). 
+
+
+\section{Repeating Commands}
+\index{vi@{\cmd vi}!repeating commands}
+     Some {\cmd vi}  commands may  begin with  repetition count
+specifiers indicating how many times the command is to be
+performed. For example:
+\begin{display}\cd
+ 3j
+\end{display}
+\noindent
+will move down three lines.
+
+     To repeat the most recent command which caused a change to the
+file (that is, some  form of  insert or delete command), the .
+(period) immediate command can be used.
+
+
+\section{Inserting Text}
+\index{vi@{\cmd vi}!inserting}
+     Commands for adding text include:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+          {\cd i}        & insert text before cursor \\
+          {\cd I}        & insert text at beginning of line \\
+          {\cd a}        & append text after cursor \\
+          {\cd A}        & append text at end of line 
+\end{tabular}
+\end{display}
+\noindent
+     These all put {\cmd vi} into insert mode. Everything that is now
+typed, up until the next \ESC, will be treated as text.
+
+ While in  insert mode,  we can  correct text  as we enter it using 
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+{\CTRL \cd H} & delete last  character entered ( many terminals
+					will allow {\ms backspace\/} to be used as well), \\
+{\CTRL \cd W} & delete last word entered, and  \\
+{\cd @}  & delete last line entered.
+\end{tabular}
+\end{display}
+\noindent
+ These will  only work  on the current line being entered, and on
+text that has been typed since the last time insert mode was entered.
+
+\section{Opening and Joining Lines}
+\index{vi@{\cmd vi}!opening lines}
+\index{vi@{\cmd vi}!joining lines}
+     To open or join lines we use:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+          {\cd o}    &     open a new line below current line \\
+          {\cd O}    &     open a new line above current line \\
+          {\cd J}    &     join lines 
+\end{tabular}
+\end{display}
+\noindent
+     When we open a new line, {\cmd vi} goes into insert mode and puts
+us at the start of the  newly opened  line. If  we join  lines, the 
+specified number of lines (default 2), beginning with the current
+line, will be joined.
+
+
+\section{Replacing Text}
+\index{vi@{\cmd vi}!replacing text}
+     To overwrite existing text, we use:
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+  {\cd r}    &     replace the character under the cursor with the next 
+                         character typed \\
+  {\cd R}    &     replace the characters from cursor onwards until the
+                         next \ESC
+\end{tabular}
+\end{display}
+\noindent
+     Replacing of  characters is  done on  a line  by line basis, so
+we do not have to  worry if  the replacement line is longer than the
+original; this will not affect the next line.
+
+
+\section{Refreshing the Screen}
+\index{vi@{\cmd vi}!screen refreshing}
+
+     Depending on the terminal type, and unless you  specifically
+request  it, {\cmd vi} does not immediately refresh the screen after
+deleting lines. Instead, deleted lines are replaced on the screen by
+{\cd @}  symbols. This  is to speed the  editor up  a bit,
+particularly for slow terminals. You can, however,  explicitly
+request  {\cmd vi} to refresh  the  screen display by entering \CTRL{\cd
+ R} (some terminals use \CTRL {\cd  L} instead).
+
+\section{Deleting, Moving, Copying and Changing Text}
+\index{vi@{\cmd vi}!editing text}
+To {\em delete\/} text, we use:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+  {\cd x}    &     delete the character under the cursor \\
+  {\cd X}    &     delete the character to the left of the cursor \\
+  {\cd D}    &     delete from the cursor to the end of the line 
+\end{tabular}
+\end{display}
+\noindent
+ as well as some others mentioned later.
+ 
+When text is deleted, it is always placed in a  buffer from where it
+can be retrieved.  There is one unnamed buffer and 26 named 
+buffers, {\cd "a} to {\cd "z}.  Unless  you explicitly select a named
+buffer,  the unnamed buffer is used. To  use a  named buffer, the
+delete,  move or  copy command  being used should begin with the
+buffer name.
+
+Deleted text can be retrieved by using:
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+  {\cd p} & insert (put) the text from the buffer after the cursor or
+				current line \\
+  {\cd P} & insert the text from the buffer before the cursor or
+				current line 
+\end{tabular}
+\end{display}
+\noindent
+     To  copy text to a buffer without deleting it, the yank commands
+are used:  
+\begin{display} 
+\begin{tabular}{@{}ll@{}}
+ {\cd y}   & copy text from cursor position \\
+ {\cd Y}   & copy text from current line 
+\end{tabular}
+\end{display}
+
+\section{Object Specifiers}
+\index{vi@{\cmd vi}!object specifiers}
+\label{obj_spec}
+     Commands such as the delete and yank commands should be followed by an
+{\kc object specifier\/} telling {\cmd vi} what  is to  be deleted  or
+copied.  If the command letter is repeated, the object is the current line.
+In other words, the command applies to the current line. Other object
+specifiers are:
+ \begin{display}
+\begin{tabular}{@{}ll@{}}
+          {\cd c}      &   a single character \\
+          {\cd w}      &   the next word or punctuation mark \\
+          {\cd W}      &   the next word \\
+     {\cd /{\ms pattern\/}}  &   the next line containing {\ms pattern} \\
+          {\cd (}      &   the start of the current sentence \\
+          {\cd )}      &   the end of the current sentence \\
+          {\cd \{}      &   the start of the current paragraph \\
+          {\cd \}}      &   the end of the current paragraph \\
+          {\cd H}      &   the home (top) line of the screen \\
+          {\cd L}      &   the last line of the screen 
+\end{tabular}
+\end{display}
+\noindent
+     The last two cases may be prefixed by a number, specifying how
+many lines below H or above L the required line is.
+
+     The object specifiers are used with the following commands:
+\begin{display}
+\begin{tabular}{@{}lp{.7\textwidth}@{}}
+ {\cd c} {\ms obj text\/} \ESC &  replace (change) the text from the cursor 
+ 										to the object {\ms obj\/} with {\ms text}. \\
+ {\cd d} {\ms obj\/} &  delete text up to object {\ms obj\/}. \\
+ {\cd y} {\ms obj\/} &  copy text up to {\ms obj\/} to the given buffer. \\
+ {\cd !} {\ms obj command\/}   &  execute the UNIX command {\ms
+			  command\/}, using the text up to {\ms obj\/} as 
+			  input, and replace this text with the ouput of
+			  the UNIX command.
+\end{tabular}
+\end{display}
+\noindent
+     Some examples should help to illustrate these concepts:
+\begin{display}
+\begin{tabular}{@{}lp{.7\textwidth}@{}}
+ {\cd dw}	& deletes the next word to the unnamed buffer.\\
+ {\cd dd}	& deletes the current line to the unnamed buffer. \\
+ {\cd "ayw}    &  yanks (copies) the next word to the buffer {\cd "a}. \\
+ {\cd y/[a-z]} &  yanks everything between (in including) the cursor 
+		position and the next lower-case letter to the unnamed 
+                  buffer. \\
+ {\cd 5Y}      &  yanks the current and next four lines to the 
+                unnamed buffer. \\
+ {\cd "ap}     &  puts the contents of the {\cd "a} buffer after current 
+                position.\\
+ {\cd !!date}  &  replaces the current line with the UNIX date.\\
+ {\cd !\}sort}  &  sorts the words to the end of the paragraph.
+\end{tabular}
+\end{display}
+\noindent
+     Many of  the object  specifiers also  allow  repetition  counts,  so 
+the commands mostly have the general form:
+\begin{display}\ms
+$[$buffer\_name\/$]$command\/$[$count\/$]$object\/
+\end{display}
+\noindent
+     For example, to delete the next six words to buffer {\cd f}, we use the
+command {\cd "fd6w}.
+
+\section{String Substitution}
+\index{vi@{\cmd vi}!replacing text}
+     We can  combine the  search and  change commands  by using the 
+substitute command.   This command  requires  both a  search  and
+a replacement string. The form of the command is:
+\begin{display}\ms
+{\cd :}$[$range\/$]${\cd s/}search\_string\/{\cd 
+/}replacement\_string\/$[${\cd /g]}
+\end{display}
+\noindent
+     The optional  {\ms range\/} specifies which lines of the file
+should be searched.  The default  is the  current line,  which is
+represented by a period (.). Ranges can specify  a single  line, or a
+start and  finish line  separated  by commas. A line can be specified
+with an explicit line number, or with an expression  involving the 
+lines .  (current line)  and \$  (last line), for example:
+ \begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+  {\cd .,.+4}   &  the current line plus the four lines that follow it.\\
+  {\cd .,\$}     &  everything from the current line to the end of the file.
+\end{tabular}
+\end{display}
+\noindent
+     The second  example can  be abbreviated by {\cd ;}. The range {\cd
+1,\$} (that is, the whole file), can be abbreviated by {\cd ,}.
+
+     The {\ms search\_string\/} is  as before, including all the
+special characters.   {\ms replacement\_string\/} is  the string with
+which we wish  to replace  the  search string.  The   only 
+metacharacters  allowed  here are  \verb+\+  (allowing  special
+characters to  be quoted),  and {\cd \&}, which represents the text
+which matched the search string.
+
+     Usually, only  the first occurrence of {\ms search\_tring\/} in
+any line in the range is substituted. To substitute  every occurrence
+in the range, the {\cd g}  option should  be  used  (this means {\ms
+replacement\_string\/}  must  be terminated by a {\cd /} to
+distinguish it from the {\cd g}). Thus, for example, to replace all
+occurrences of {\cd UNIX} in a file with  {\cd the UNIX operating
+system}, we can  use 
+\begin{display}\cd
+ 1,\$s/UNIX/the \& Operating System/g
+\end{display}
+
+
+\section{Undoing Commands}
+\index{vi@{\cmd vi}!undoing changes}
+     To undo changes made, we use:
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+          {\cd u}    &     undo the last change made \\
+          {\cd U}    &     restore the current line to what it was before 
+                           editing began 
+\end{tabular}
+\end{display}
+
+
+\section{Setting {\cmd vi} Options}
+\index{vi@{\cmd vi}!options}
+     Many of  {\cmd vi}'s features may be controlled by the user. To
+enable, disable, set or  list options,  the {\cd :set}  command is 
+used.  To  list  all  the  option settings, use:
+\begin{display}\cd
+ :set all
+\end{display}
+\noindent
+     To list only those options that you have changed, use:
+\begin{display}\cd
+ :set
+\end{display}
+\noindent
+     To set  an option,   enter  {\cd :set} followed by the option
+name.  To clear the option,   prefix  the name  with {cd no}.  The main
+options (plus acceptable abbreviations) are:
+\begin{display}
+\begin{tabular}{@{}lll@{}}
+ {\cd autoindent}  & {\cd ai} & automatic indentation of lines \\
+ {\cd autowrite}   & {\cd aw} & automatically save file before exit \\
+ {\cd ignorecase}  & {\cd ic} & ignore upper/lower case in searches    \\
+ {\cd list}        &          & print tabs as {\cd \verb+^+I} and end of 
+ 										  line as {\cd \$} \\
+ {\cd number}      & {\cd nu} & display line numbers \\
+ {\cd showmatch}   & {\cd sm} & show matching brackets as the are typed, by
+			flashing the cursor \\
+ {\cd wrapmargin} & {\cd wm} & enable automatic line splitting in
+				the given zone
+\end{tabular}
+\end{display}
+\noindent
+     Examples of usage are:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+    {\cd :set nolist}   &      don't print tabs and line feeds \\
+    {\cd :set nu}       &      display line numbers 
+\end{tabular}
+\end{display}
+\noindent
+     The autoindent  option makes  {\cmd vi} indent each line to the
+same left margin as the  previous line.  To ``unindent''  a line  by
+one indentation, use \CTRL{\cd  D}\@.  {\cd showmatch} makes  {\cmd vi}
+briefly highlight matching left brackets as you type right brackets,
+provided  both are  on the  same screen.  If there  is  no  matching
+bracket, {\cmd vi} beeps to indicate a possible error.
+
+
+\section{Defining and Using Key Macros}
+\index{vi@{\cmd vi}!macros}
+
+     It is  possible to  define key  macros for  commonly used
+sequences of {\cmd vi} commands. This  is done  with the  {\cd :map}
+command.  Special  characters  can  be entered into  macros by  using
+a  \CTRL{\cd  V} prefix.  For example,  suppose  we wish to enter a
+number of lines of the form:
+\begin{display}\cd
+table[21]="example";
+\end{display}
+\noindent
+ where only  the table  index and string contents vary. To do this
+fast, we could define two macros as follows:
+\begin{display}\cd
+ :map t A\CTRL V\CR table[ \\
+ :map s A]="";\CTRL V\ESC hi
+\end{display}
+\noindent
+ The first line assigns a macro to the key {\cd t}.  The macro starts
+a new line (by appending a carriage return to the current line) and
+then inserts {\cd table[}, leaving {\cmd vi} in insert mode which will
+enable us to type in the desired index.  The second line defines a
+macro for the {\cd s} key.  It appends {\cd ]="";} to the current
+line, goes into edit mode, positions the cursor on the second quote,
+and puts {\cmd vi} in insert mode, ready for us to type in the string. 
+     To remove a macro definition,  use {\cd :unmap} (for example,
+{\cd :unmap t}).
+
+
+\section{Reading and Writing Files}
+\index{vi@{\cmd vi}!file operations}
+There are ways
+of reading and writing text into and from the work buffer without
+exiting {cmd vi}.
+
+     The read command has the format:
+\begin{display}\cd
+:r {\ms filename\/}
+\end{display}
+\noindent
+     This reads  the specified  file and inserts it after the current
+line. To read a  file into the work buffer and replace the contents
+of the work buffer, the edit command should be used:
+\begin{display}\cd
+:e {\ms filename\/}
+\end{display}
+\noindent
+     To write out text from the work buffer, the write command
+can be used.  This has the form:
+\begin{display}\cd
+:$[${\ms range\/}$]$w$[${\ms option\/}$][${\ms filename\/}$]$
+\end{display}
+\noindent
+     where the optional {\ms range\/} is  the same  as for  the 
+substitute command, and the optional {\ms option\/} can be one of {cd
+!} or {\cd >>}.   If no file name is specified, the work buffer is
+written to file currently being edited.
+
+If  a range is given, only the specified portion of the work buffer
+will be written to the given file.  If no range is  specified, the 
+entire buffer is written. {\cmd vi} will not overwrite an existing
+file  if only  part of the buffer is being written.  To do this, you 
+must use  the overwrite  option {\cd !}.  To append  to a file rather
+than overwriting it, the {\cd >>} option must be used.
+
+The {\cd :e} command can also be followed by an exclamation  mark.
+This  forces {\cmd vi} to obey the command even if changes made to the
+work buffer have   not been saved.  Be  careful about using {\cd !}; 
+always  try  to perform a command without it first.
+
+\section{Advanced Search and Replace}
+\index{vi@{\cmd vi}!replacing text}
+The search and replace facility of {\cmd vi} is much more powerful
+than we indicated previously. Much of this power comes from being
+able to group regular expressions in the search string, and then use
+these groups as part of the replacement string.
+
+The grouping facility is done using {\cd \verb+\+(} and {\cd
+\verb+\+)}. Within the replacement string, the groups are referred to
+as {\cd \verb+\+1}, {\cd \verb+\+2}, etc, in sequence.
+
+Additional special characters in the replacement string are:
+\begin{display}
+\begin{tabular}{@{}lp{.8\textwidth}@{}}
+\cd \verb+\+u &  convert the next character to upper case \\
+\verb+\+l &  convert the next character to lower case \\
+\verb+\+U &  turns on upper case conversion until \verb+\+e, 
+					\verb+\+E or the end of the replacement string is
+					encountered.\\
+\verb+\+L & as for \verb+\+U, but for lower case.
+\end{tabular}
+\end{display}
+\noindent
+ Here are some examples to clarify these concepts. To convert all
+occurences of ``up and over'' to ``over and up'', we can use:
+\begin{code}
+:s/\verb+\+(up\verb+\+)\verb+\+( and \verb+\+)\verb+\+(over\verb+\+)/%
+\verb+\+3\verb+\+2\verb+\+1/g
+\end{code}
+\noindent
+or, equivalently:
+\begin{code}
+:s/\verb+\+(up\verb+\+) and \verb+\+(over\verb+\+)/\verb+\+2 and
+\verb+\+1/g
+\end{code}
+\noindent
+ To convert all occurences of the words ``unix'' or ``Unix'' to
+``UNIX'', we can use:
+\begin{code}
+:s/[uU]nix/\verb+\+U\&/g
+\end{code}
+\noindent
+ (Recall that {\cd \&} corresponds to the matched text). Similarly, to
+convert all occurences of the word ``multics'' to ``Multics'', we can
+use:
+\begin{code}
+:s/multics/\verb+\+u\&/g
+\end{code}
+\noindent
+ While these examples are trivial, and could as easily have be done using
+simple patterns, they illustrate the concepts. Real examples will
+appear when you are programming, and the true value of case
+conversion and regular expression grouping will then become apparent.
+
+\section{Miscellaneous}
+\index{vi@{\cmd vi}!running UNIX commands from}
+     UNIX commands  can be  sent to  the shell while in {\cmd vi}. To
+do this, prefix the UNIX command  with an  exclamation mark.  For example,
+to find out the time, enter {\cd !date}\CR.  See also
+section~\ref{obj_spec} on
+Object Specifiers
+
+     To find  out the name and size of the file we are editing, the
+{\cd :f} or or  \CTRL{\cd G} command can be used.
+
+
+\section{Recovering from Crashes}
+\index{vi@{\cmd vi}!recovering from UNIX crashes}
+     {\cmd vi} continually saves the contents of the editing buffer in
+a file. If the system crashes,  you can  recover your file up to
+the last change made. {\cmd vi} normally sends you mail indicating
+that a recovery file is available. When you invoke {\cmd vi} the next
+time with that file name, you must invoke it with
+\begin{display}\cmd
+ vi -r {\ms filename\/}
+\end{display}
+\noindent
+ after which  you can  continue from  where you left off.  If you
+invoke {\cmd vi} without this option, the recovery file will be lost.
+
+
+\section{Installing {\cmd vi} Options Permanently}
+\index{vi@{\cmd vi}!options}
+     If you  use certain  {\cd :set} options in {\cmd vi} every time you
+use the editor, you can have these options automatically set for you.
+To do this you must edit (or create if  necessary) the file {\fn .profile}
+in your login directory and add the lines:
+\begin{display}\cd
+ EXINIT='set {\ms option\_list\/}' \\
+ export EXINIT
+\end{display}
+\noindent
+     Every time  you execute  {\cmd vi},  the  shell  will  send  it 
+these  settings automatically.
+

@@ -1,0 +1,668 @@
+
+\section{Structures}
+\index{structures}
+     A {\kc structure\/}  is a  collection of  named components of
+various types. They are thus  similar to  records in  a data
+file.  For example,
+\begin{code}
+struct\{  \+\\
+ char *name; \\
+ int dept; \\
+ long tel; \-\\
+\} staff[50];
+\end{code}
+\noindent
+ defines {\cd staff} as an array with 50 elements, where each element
+consists of an employee name, department number, and telephone
+number.
+
+Each time we define a structure type\index{structures!types}, we introduce a new type
+different from all others. If we wish to declare more than  a few
+structures of a particular type, we must name the
+structure type  so that  we can  refer to  it again.  We can do this
+using a 
+{\cd typedef}\index{storage classes!typedef@{\cd typedef}}
+\index{typedef@{\cd typedef}}, 
+for example,
+\begin{code}
+typedef struct\{  \+\\
+ char *name; \\
+ int dept; \\
+ long tel; \-\\
+\} an\_employee; \addVspace
+an\_employee staff[50];
+\end{code}
+\noindent
+Alternatively we can name the structure with a 
+{\kc structure tag}\index{structures!tags}.
+For example:
+\begin{code}
+struct employee \{  \+\\
+ char *name; \\
+ int dept; \\
+ long tel; \-\\
+\}; \addVspace
+struct employee staff[50];
+\end{code}
+\noindent
+ gives the name {\cd employee} to the structure we used earlier, and
+then declares an array of 50 of these structures. We could also have
+used:
+\begin{code}
+struct employee \{  \+\\
+ char name; \\
+ int dept, \\
+ long tel; \-\\
+\} staff[50];
+\end{code}
+\noindent
+for the same effect. The general form of a structure definition is
+therefore
+\begin{code}
+struct {\ms structure\_tag\/} \{  \\
+\> {\ms structure\_description\/}  \\
+\} {\ms variable\_list\/};
+\end{code}
+\noindent
+ where {\ms structure\_tag\/} and {\ms variable\_list\/} are optional
+(although it would be pointless to leave them both out).
+
+     Structures can  be  forward  referenced  
+\index{forward references}provided  their  sizes
+are  not required. This allows structures to refer to one another,
+for example:
+\begin{code}
+struct P\{ struct Q *qp; \}; \addVspace
+
+struct Q\{ struct P *pp; \};
+\end{code}
+\noindent
+     To access  the components  of a 
+structure\index{structures!component selection}
+\index{unions!component selection}, C provides the two
+operators: {\cd .} ({\kc direct component  selection\/}) and {\cd ->}
+({\kc indirect component selection\/}).  The first is used  on
+structures, the second  on  pointers  to  structures.  Using  our
+{\cd employee} example above, we can write:
+\begin{code}
+  struct employee x, *y, z;   \addVspace
+
+  y = z; \tab\tab\tab /* y now points to z */ \\
+  x.name = "The Boss";	   \\
+  x.dept = 1;		   \\
+  (\&x)->tel = 666;	   \\
+  y->name = "Joe Soap";	   \\
+  (*y).dept = 99;
+\end{code}
+\noindent
+     Structures can be initialised; for example:
+\begin{code}
+struct S\{ int a; char *b; \} x = \{1,"abcd"\};
+\end{code}
+\noindent
+ declares a variable {\cd x} with structure {\cd S} and initialises
+{\cd x.a} to {\cd 1}, and {\cd x.b} to point to the string {\cd
+"abcd"}.
+
+     Older C  compilers only  allow pointers to structures to be
+passed to and from 
+functions\index{functions!arguments}\index{functions!returning values},  
+and do not allow structure assignment
+(this must be done on a com\-po\-nent-by-component basis).  Newer
+compilers,  however, allow structures to be assigned to, and passed to
+and fro.  Structures may  not be  compared for equality (if you want
+to do this, you must write your own function to do it on a
+com\-po\-nent-by-component basis).
+
+     Structure components  may have  any type  except function types.
+Note, however, that a structure component may have the type {\ms
+pointer to function}.
+Structures may not contain  instances of themselves (an infinite
+regression!) but may contain pointers to  instances of  themselves.
+The  only  overloading  restriction  on component names  is  that
+the  component  names  within  any  one  particular structure
+definition must be distinct.
+
+     Small integer components can be packed into small spaces using
+{\kc bitfields\/}\index{structures!bitfields}\index{bitfields}.  The 
+component  name in  the definition is followed
+by a colon ({\cd :}) and the number of bits  to be  used. Unnamed
+bitfields can  be used  for padding. The use of bitfields is  likely
+to be non-portable; the main use is in matching some data structure
+exactly.  As an example, a structure to match the general form of an
+(assembler) instruction of the Motorola MC68000 microprocessor chip is:
+\begin{code}
+struct instr \{ \+\\
+  int \=op:4, \\
+  \>  reg1:3, \\
+  \>  mode1:3,\\
+  \>	mode2:3,\\
+  \>	reg2:3;   \-\\
+\};
+\end{code}
+\noindent
+     Such a  structure would  occupy 16  bits, which  is  the  length
+of  the standard MC68000  instruction. Thus  our structure  would
+match an instruction exactly, and give us easy access to the various
+fields of such an instruction.
+
+Something worth noting is that the {\cd sizeof} operator cannot be
+applied to bitfields. The operator returns a size in bytes, so its
+application to bitfields is meaningless. Likewise it can be dangerous
+to apply the {\cd \&} operator to a bitfield. Arrays of bitfields are
+not allowed. Unions may not contain bitfields, but may contain
+structures which contain bitfields, so this is no real restriction.
+
+As most  16-bit computers  do not allow 16 and 32-bit data items
+(such as {\cd short} and  {\cd long int}s)  to be  on odd-address
+boundaries, while bytes (that is, {\cd char}s) may, a structure may
+contain holes\index{structures!holes in}\index{unions!holes in}. For example:
+\begin{code}
+struct eg \{ int a; char b; int c \};
+\end{code}
+\noindent
+     will not  be able  to be  packed into 5 bytes (assuming 16-bit
+ints), but will need  6 bytes.  Thus a one byte hole will occur in
+the structure (this is why we  must compare  structures for  equality
+component-for-component, as the contents of  the holes  are
+undefined).  Thus, {\cd sizeof}  must always be used when determining the
+size of a structure.
+
+     Even rearranging the above definition to read:
+\begin{code}
+struct eg \{ int a,c; char b; \};
+\end{code}
+\noindent
+     will not help, as the compiler works out the size of a structure
+based on the assumption  that you may declare arrays of the
+structure. Conceptually, we can think  of this  as: if  we stored
+three of these structures in memory one after the  other, how  much
+memory  would the  middle one have to occupy if no invalid addresses
+are allowed. No matter how we arrange the above example, the answer
+is always 6 bytes.
+
+\subsection{I/O with Structures}
+\index{structures!I/O}
+
+It is possible to read and write structures, unions, and so on, using
+the {\cd fread} and {\cd fwrite} library functions. However, things
+are not always as simple when we wish to read a file with a
+particular format into an array of records. Consider a data file
+which has a strict line layout, such as shown in the following table.
+\begin{center}
+\begin{tabular}{l|l}
+Position & Data\\
+\hline
+1-13 & Employee's ID number\\
+14-32 & Employee's Name\\
+33-40 & Employee's Salary\\
+\end{tabular}
+\end{center}
+Assume we want to read the employee's birth dates (obtained from
+their ID number) and names into an array of structures defined as:
+\begin{code}
+struct BirthData \{    \\
+\>	int day;    \\
+\>	int month;    \\
+\>	int year;    \\
+\>	char name[20];    \\
+\};
+\end{code}
+\noindent
+One problem that may occur is with the names -- they can contain
+whitespace. If you use {\cd scanf} with a {\cd \%s} conversion
+specifier for the string, the read will terminate at the first space
+character found in the person's name. This is not what we want. The
+solution is to use the {\cd \%c} conversion specifier instead, with
+the code:
+\begin{code}
+struct BirthData buf; \\ \addVspace
+
+scanf(\="\%2d\%2d\%2d\%*7c\%19c\%*8c", \\
+\>	\&buf.year,\&buf.month,\&buf.day,buf.name);\\
+$\vdots$
+\end{code}
+\noindent
+Note however that unlike with {\cd \%s}, {\cd scanf} does not add the
+terminating {\cd `\verb+\+0'} byte automatically if {\cd \%c} is used.
+Also, {\cd \%c} reads in and keeps all trailing white space, so that
+{\cd strlen(buf.name)} would always be nineteen, regardless of the
+name read (of course, if we haven't added the terminationg byte
+ourselves, then the string may well be longer than 19 characters).
+
+If you want to read and write complete structures (as opposed for a
+field-by-field method as used above), you should bear in mind that
+the whole structure will be written, including any `holes'. You can
+use the {\cd sizeof} operator to find out how many bytes are occupied
+by a structure. This is the number of bytes that will be read and
+written. The advantage of reading and writing whole structures is
+that we are guaranteed that the field will be read back in correctly,
+as a specific number of bytes will be written/read at a time. You
+should open the file in binary mode, not text mode, to ensure that
+this works correctly. Also bear in mind that structures which contain
+pointers will be read in with the old pointer values -- if the memory
+allocated for the structures that are read in is not at precisely the
+same address as the structures that were written out, these pointer
+fields will no longer be valid.
+
+The following function and macros are useful for copying whole
+structures\index{structures!copying}. They are independent of the 
+structure to be copied:
+\begin{code}
+void \_scopy(dest, source, len) \\
+\> char *dest, *source; \\
+\> int len; \\
+\{ \+\\
+	if(  len > 0  )\{ \+\\
+		while( len-- )\{ \+\\
+			*dest++ = *source++; \-\\
+		\} \-\\
+	\} \-\\
+\} \addVspace
+
+\#define structcopy(d,s) \tab\tab\=\_scopy(\&d,\&s,sizeof(s)) \\
+\#define pstructcopy(d,s)        \>\_scopy(d,s,sizeof(*s))
+\end{code}
+\noindent
+{\cd structcopy} takes structures as arguments, while {\cd
+pstructcopy} takes pointers to structures as arguments.
+
+\subsection{Structures and Absolute Addresses}
+\index{structures!absolute addressing}
+Structures can be a convenient way to access tables at fixed
+locations in memory. For example, IBM PC's have a table called the
+disk base table at address {\cd 0xFEFC7}. We can define a structure
+with fields corresponding to this table as:
+\begin{code}
+struct\{ \+\\
+	char \=specify1, \+\\
+		specify2,	\\
+		wait\_time,	\\
+		sector\_size,	\\
+		last\_sector,	\\
+		RW\_gap\_length,	\\
+		data\_length,	\\
+		format\_gap\_length,	\\
+		format\_value,	\\
+		settle\_time,	\\
+		startup\_time;	\-\-\\
+\} far *DskBaseTbl = 0xFEFC7;
+\end{code}
+\noindent
+The actual details of this table, as well as the PC-specific
+keyword {\cd far}, is beyond the scope of this discussion. Having
+created our table structure, we can now access the elements of the
+table using the usual structure pointer operations. (Hackers, take
+note -- the address of the table as given, is the default table in the
+ROM BIOS; thus you cannot change any of these values. The location of
+the RAM version of the table is given by interrupt vector 1E).
+
+\section{Unions}
+\index{unions}
+     Much of  what we  have said  about  structures  also applies
+to the  type {\cd union}. Unions too have a number of components, and
+have declarations which are (superficially, at least) the same as
+structure declarations, except using the keyword {\cd union}  instead
+of  {\cd struct}. However,  a union can only store one of its
+components at  a time;  in other words, the components are overlaid in
+memory.  This allows us to access areas of memory in different ways.
+In other words, a C {\cd union} is similar to a Pascal variant
+record.
+
+     C does  not provide  a way  to determine which component  of a union
+was last assigned; it  is up  to the  programmer to  keep track of
+this. This
+is unlike Pascal variant records,  which have a tag to indicate which
+type is present. This can easily be  done in  C as well; C just
+doesn't demand it (thus allowing greater flexibility). For example,
+\begin{code}
+  \#define STRING 0 \\
+  \#define VALUE  1 \\
+  \#define CHR    2 \addVspace
+
+  struct reply \{			\+\\
+       short tag;			\\
+       union \{ 				\+\\
+            char str[8]; 	\\
+            long val; 		\\
+            char ch;			\-\\
+       \} is;				\-\\
+  \} answer;
+\end{code}
+\noindent
+defines a variable, {\cd answer}, to have the {\cd reply} structure.
+The latter consists of two fields, {\cd tag}, and {\cd is}, where
+{\cd is} can be any of three things: a {\cd char} array, a {\cd
+long}, or a single character.
+
+     To assign to this union, we can use:
+\begin{code}
+  answer.tag = STRING; \\
+  strcpy( answer.is.str, "Yes");
+\end{code}
+\noindent
+     or
+\begin{code}
+ answer.tag = VALUE; \\
+ answer.is.val = 43;
+\end{code}
+\noindent
+     or
+\begin{code}
+  answer.tag = CHR;     \\
+  answer.is.ch = 'N';
+\end{code}
+\noindent
+     The advantage of using tags is obvious: we can now determine what
+type of data the  union is  holding by  examining {\cd answer.tag}.
+We can then easily write functions such as:
+\begin{code}
+        print\_answer( a ) \\
+        \> struct reply *a;  \\
+		  \{ \+\\
+	       switch( a->tag )\{ \\
+          case STRING: 									\\
+			 \> printf("\%s\verb+\+n", a->is.str); \\
+			 \> break; \\
+          case VALUE: 									\\
+			 \> printf("\%ld\verb+\+n",a->is.val); \\
+			 \> break; \\
+          case CHR: 										\\
+			 \> printf("\%c\verb+\+n", a->is.ch ); \\
+			 \> break; \\
+          default: 										\\
+			 \> printf("ERROR - invalid reply tag!\verb+\+n"); \\
+          \} \-\\
+        \}
+\end{code}
+\noindent
+     Bit fields\index{unions!restrictions}  are not  allowed in 
+unions, and unions cannot be
+initialised.  In other respects,  unions and  structs are
+very similar.
+
+     Note that structures and unions cannot be cast to other 
+types\index{types!conversions}. However, pointers to structures and unions 
+can be cast to pointers of
+other types (including to structures and unions of other types). 
+Thus the following
+code is legal (although it is pointless and dangerous):
+\begin{code}
+struct A \{ int i; \}; \\
+struct B \{ float f; \}; \addVspace
+
+void jam\_float\_into\_int(val,a) \\
+\>float val; \\
+\>struct A a; \\
+\{ \\
+\>struct B *b = (struct B *)\&a; \\
+\>b->f = val; \\
+\}
+\end{code}
+
+\section{Enumerations}
+\index{enumerations}
+     Enumerations are  a recent  addition to  C and  are not
+supported by many older compilers.  Although they are redundant,
+since macros can be used for precisely  the same  purpose  (symbolic
+names for  constants), they are more convenient and less error
+prone.  Furthermore, symbolic debuggers\index{debugging}  give enumerations an edge over
+macros, as they cannot deal symbolically with macros but can with
+enumerations.
+
+An enumeration  is a  set of  values represented  by identifiers
+known as {\kc enumeration constants\/}\index{enumerations!constants}, and like structures  and
+unions, an enumeration declaration  may include a tag name 
+\index{enumerations!tag names}for the
+enumeration.  For example
+ \begin{code}
+  enum committee \{ \\
+  \> president, vice\_president, secretary, treasurer \\
+  \} member; \addVspace
+
+  member=secretary; \addVspace
+
+  if( member==secretary ) printf("The Secretary\verb+\+n");
+\end{code}
+\noindent
+ declares an enumerated type with name {\cd committee} and a variable
+of that type named {\cd member}, assigns an enumerated constant {\cd
+secretary} to the variable, and tests it for equality.
+
+Enumerations are essentially lists of integer constants,
+and the compiler simply replaces references to enumeration elements
+with the appropriate constant value.
+It happens  that C represents enumeration constants with integers,
+numbered (by default)  from 0 
+upwards\index{enumerations!constants!default values}. This  numbering implies
+an order  on  the constants, so that in our example
+\begin{code}
+president < vice\_president < secretary < treasurer
+\end{code}
+\noindent
+     (which might reflect  the real  power wielded  in a  committee).
+This could have been done with macros, using
+\begin{code}
+  \#define VICE\_PRESIDENT \= 1 \kill
+  \#define PRESIDENT       \> 0 \\
+  \#define VICE\_PRESIDENT \> 1 \\
+  \#define SECRETARY       \> 2 \\
+  \#define TREASURER       \> 3 \addVspace
+
+  unsigned short member;
+\end{code}
+\noindent
+     It is possible to specify which  values must be associated with
+enumeration constants\index{enumerations!constants!overriding default values}. 
+The  rules used are  that the  first
+constant  has value  zero, unless otherwise  specified, and  all
+others  have a value of one greater than the previous constant,
+unless otherwise defined. Thus if we declare:
+\begin{code}
+enum colour\{  \+\\
+  red=2, green, blue, \\
+  yellow=8, black, white \-\\
+ \};
+\end{code}
+\noindent
+     The associated values will be:
+\begin{code}
+red=2;   green=3;   blue=4;   yellow=8;  black=9;  white=10;
+\end{code}
+\noindent
+
+
+\section{Functions Revisited}
+\index{functions}
+     A {\kc function  definition\/} (not  to be  confused with a
+function declaration) introduces a new function and provides some
+information about it, namely:
+ \begin{itemize}
+\item the type of the value returned, if any;
+
+\item the types, names and number of formal parameters;
+
+\item the visibility of the function outside of the file; and
+
+\item the function body (code to be executed).
+\end{itemize}
+     Functions \index{functions!visibility}may only have the storage 
+classes {\cd extern} (visible
+outside file) or {\cd static} (not visible outside file).
+
+The default  return type is {\cd int}\index{functions!returning values}. 
+Functions may not return
+arrays, structs\footnote{Modern C compilers might allow structs as
+return values.}, or other functions, but may return any other type. For
+example:
+\begin{code}
+float ( *(*fn(x,y))[] )()\\
+\vdots
+\end{code}
+\noindent
+     declares {\cd fn} as a  function taking  two parameters  {\cd x}
+and {\cd y}, and returning a pointer to an array of pointers to
+functions returning {\cd float}s.
+
+     The order  of the  arguments in the formal parameter list and in
+calls to the function  must agree  (although C  does not actually
+check this); however, the order  of the  formal parameter
+declarations  is  unimportant.  The  only explicit storage  class
+specifier  allowed for  formal parameters is {\cd register} (the
+default is {\cd auto}).  Parameters may  be of  any type  except {\cd
+void}  and ``function returning...'' (the latter will  simply be
+treated as function calls, with the returned value used as the actual
+argument).  To repeat, however, pointers to functions may be used as
+parameters.
+
+     A {\cd return}  statement without  an expression  is allowed
+(although if  the function is  not of  type {\cd void},  the
+returned  value is  unpredictable).  This allows us  to request  a
+function to be exited before the end. If the function is of  type
+{\cd void},  it is an error to have an expression in a {\cd return}
+statement.  Furthermore, {\cd void}  functions may never be called in a
+context which requires a value. Thus:
+\begin{code}
+     extern void factor(); \\
+     \vdots    \\
+     a = 2*factor();
+\end{code}
+\noindent
+     is not  allowed. In  all other  cases of  {\cd return}, C
+attempts to cast the  return expression  to the return type of
+the function; if this cannot be done, an error occurs.
+
+\subsection{Variable Parameter Lists}
+\index{functions!arguments!variable number of}
+The discerning reader might be wondering by now how functions such as
+{\cd printf} and {\cd scanf} work, as they take variable numbers of
+parameters. C allows us to define such functions, and they can be an
+extremely powerful construct. The only requirement is that there must
+be some way of telling how many parameters there are, and what their types are. In {\cd
+printf} and {\cd scanf}, this is done by examining the format string,
+as it is assumed that there are as many arguments (of the apropriate types) as there are
+conversion specifiers.
+
+For example, say we wish to write a function which takes several
+strings as parameters, and writes each one on a new line. The
+simplest way to specify how many strings there are is to pass the
+number of strings as the first parameter. The following example
+function will do the task:
+\begin{code}
+\#include <varargs.h> 								\addVspace
+
+void print\_strings(va\_alist)				   \\
+\> va\_dcl \tab	/* Note: no semicolon */  \\
+\{	\+														\\
+	va\_list args;										\\
+	int arg\_count;									\\
+	char *string;										\addVspace
+
+	va\_start(args);									\\
+	arg\_count = va\_arg( args, int);			\\
+	while( arg\_count-- )\{ \+						\\
+		string = va\_arg( args, char* );			\\
+		puts(string);								 \-\\
+	\}														\\
+	va\_end(args);									 \-\\
+\}
+\end{code}
+\noindent
+The example shown is for UNIX systems; other operating systems may
+use slightly different forms. The header file {\fn varargs.h}
+contains the definitions of {\cd va\_dcl}, etc. The meaning of each of
+these is:
+\begin{description}
+\item[\cd va\_alist] is used as the parameter list in the
+function header.
+\item[\cd va\_dcl] declares {\cd va\_alist}. There should be
+no semicolon.
+\item[\cd va\_list] defines the type of a special variable
+which is used to traverse the argument list. This variable should
+never be modified directly.
+\item[\cd va\_start] initialises the special variable to point
+to the start of the argument list.
+\item[\cd va\_arg] returns the next argument in the list. It
+takes two arguments itself, the first being the special variable
+described above, and the second being the type of the argument we are
+about to get from the list.
+\item[\cd va\_end] cleans up any mess at the end.
+\end{description}
+
+\subsection{Passing Arguments to {\cd main()} from UNIX}
+\index{command line arguments}
+\index{main@{\cd main}!passing arguments to}
+As we have mentioned at the biginning,
+each C program must have one and only one function called {\cd main}.
+UNIX allows  arguments to  be passed  to {\cd main()}, which can 
+be defined as:
+\begin{code}
+          main(argc,argv) \\
+          int argc; \\
+          char *argv[];
+\end{code}
+\noindent
+ where {\cd argc} is  the  argument  count (the number of arguments
+passed), and {\cd argv}  is the  argument vector, an array of
+pointers to strings which hold the arguments.  The first of these
+arguments is  always the  name of  the program.  For example, say  we
+have  a program  {\cmd renum} which renumbers BASIC programs, and we
+wish to be able to invoke it with
+ \begin{display}\ms
+{\cmd renum} input\_file output\_file start\_number step
+\end{display}
+\noindent
+     In other  words, to  renumber the program {\fn myprog.b} starting
+with line 100, using steps of 10, and sending the output to {\fn
+newprog.b}, one would use:
+\begin{display}\cmd
+renum myprog.b newprog.b 100 10
+\end{display}
+\noindent
+     If we  had declared  the {\cd main}  function as shown earlier, we
+would have the following:
+\begin{display}\cd
+\begin{tabular}{@{}ll@{}}
+  argc = 5  & \\
+  argv[0]="renum"    &  argv[3]="100" \\
+  argv[1]="myprog.b" &  argv[4]="10"  \\
+  argv[2]="newprog.b" &
+\end{tabular}
+\end{display}
+\noindent
+     These arguments  can be used by {\cd main} instead of having to
+prompt for and read them from the keyboard. This, in fact, is how the
+UNIX commands such as {\cmd cc} get their arguments.
+
+Conceptually, {\cd main} is the function with which execution begins. 
+In
+reality, all C implementations include a special piece of code, the
+{\kc startup code}\index{startup code}, where execution actually begins. 
+This code is
+responsible for calling the {\cd main} function
+and passing it the array of command line arguments, opening the {\cd
+stdin}, {\cd stdout} and {\cd stderr} files, and setting up the program
+stack and memory heap. It usuallly also cleans up after {\cd main}
+exits, and passes back any values returned by {\cd main} or calls to
+{\cd exit} to the operating system.
+
+An example of the use of the startup code is as follows: on MS-DOS
+systems, unlike UNIX, the command shell {\fn COMMAND.COM} does not
+expand wild characters. In other words, if we run a program {\cmd
+prettyprint} with the command line:
+\begin{display}\cmd
+prettyprint *.c
+\end{display}
+\noindent
+then {\cd argv[1]} will have the value ``{\cd *.c}''. On a UNIX
+system, the shell first expands the {\cd *.c} pattern into a list of
+matching files, and passes these to the program. If we wanted this to
+occur in MS-DOS, we would have to do the work of matching the files
+in our {\cd main} function. An alternative provided by some C
+compilers is to have two versions of the startup code -- one which
+does no wildcard expansion, and one which does. The latter is
+obviously bigger than the former, so by default the former will be
+used. If we need wild character expansion, then we can link the
+program with the alternative startup code. We then do not have to
+make any changes to the {\cd main} function.
+

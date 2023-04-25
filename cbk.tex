@@ -1,0 +1,67 @@
+\documentstyle[portTitle,makeidx,11pt,twoside,A4,lists,miihead]{report}
+\makeindex
+\input{envs}
+\newcommand{\crest}{\raisebox{-1cm}[.8cm][1cm]{\rule{0.003in}{0.003in}%
+\makebox[.7cm]{\special{insert newcrest.pic}}}}
+\begin{document}
+\pagestyle{empty}
+\pagenumbering{roman}
+\special{insert newcrest.def}
+%
+%\begin{titlepage}
+\mbox{}
+\vspace*{3cm}
+\begin{flushright}
+\Huge C for Yourself\\[2mm]
+\Large Programming in C under UNIX \\[3cm]
+Graham Wheeler\\
+Ri\"{e}l Smit
+\end{flushright}
+\vfill
+\normalsize
+\noindent\crest\ \hrulefill\raisebox{-1mm}{\makebox[0pt][r]{%
+\begin{tabular}{@{}r@{}}
+Department of Computer Science\\University of Cape Town
+\end{tabular}}}
+%\end{titlepage}
+%
+\newpage
+\mbox{}\vfill 
+
+\noindent This documentation was prepared with \LaTeX\ and reproduced
+by the Printing Department, University of Cape Town from camera-ready
+copy supplied by the authors.\\[.5\baselineskip]
+UNIX is a trademark of AT\&T Bell Laboratories.\\[.5\baselineskip]
+ Copyright \copyright 1990 by the authors.\\[.5\baselineskip]
+All rights reserved.  No part of this publication may be reproduced,
+stored in a retrieval system, or transmitted, in any form or by any
+means, electronic, mechanical, photocopying, recording or otherwise,
+without the prior written permission of the authors.
+\cleardoublepage
+\input{preface}
+\cleardoublepage
+\pagestyle{biiheadings}
+\tableofcontents
+\cleardoublepage
+\pagenumbering{arabic}
+\input{intro}
+\input{c1}
+\input{c2}
+\input{c3}
+\input{c4}
+\input{c5}
+\input{c6}
+\input{c7}
+\appendix
+\input{cc}
+\input{vi}
+\input{tools}
+\input{ansi_c}
+\input{portCenv}
+\input{port}
+\renewcommand{\cmd}{\tt} %!!!!! kludge !!!!!
+\input{cstyle}
+\cleardoublepage
+\input{see}
+\printindex
+\end{document}

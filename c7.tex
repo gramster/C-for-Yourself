@@ -1,0 +1,311 @@
+\cleardoublepage
+\chapter{Program Development and Style}
+\section{C Style}
+\index{style}
+    C  was  designed for  the development of large-scale applications
+based on a uniform philosophy (UNIX!).  The result is that the
+language lends itself well to writing modular programs.   Programs
+may be split over several files which can be separately compiled and
+updated, they can include text from other files, conditional
+compilation is allowed, and the visibility of  functions and 
+variables can  be easily controlled with storage class specifiers.
+
+     This is helpful in the development of large programs.
+However, to successfully develop  and maintain  a large program, good
+programming style is essential. This aids readability, ease of
+modification, and portability. Good, clear programming  style is 
+generally much  more desirable than efficiency or brevity.
+A normal, sane person would not, for example, want to write a program 
+like the one in Figure~\ref{obfuscate}.
+\begin{figure}\small
+\begin{verbatim}
+long h[4];E[80],S;t(){signal(14,t);if(S)longjmp(E,1);}c,d,l,v[]={(int)t,0,2},
+w,s,I,K=0,i=276,j,k,q[276],Q[276],*n=q,*m,x=17,f[]={7,-13,-12,1,8,-11,-12,-1,9
+,-1,1,12,3,-13,-12,-1,12,-1,11,1,15,-1,13,1,18,-1,1,2,0,-12,-1,11,1,-12,1,13,
+10,-12,1,12,11,-12,-1,1,2,-12,-1,12,13,-12,12,13,14,-11,-1,1,4,-13,-12,12,16,-
+11,-12,12,17,-13,1,-1,5,-12,12,11,6,-12,12,24};u(){for(i=11;++i<264;)if((k=q[i
+])-Q[i]){Q[i]=k;if(i-++I||i%12<1)printf("\033[%d;%dH",(I=i)/12,i%12*2+28);
+printf("\033[%dm  "+(K-k?0:5),k);K=k;}alarm(1);Q[263]=c=((S=1)&&!setjmp(E))?
+getchar():-1;alarm(0);}G(b){for(i=4;i--;)if(q[i?b+n[i]:b])return 0;return 1;}g
+(b){for(i=4;i--;q[i?x+n[i]:x]=b);}main(C,V,a)char**V,*a;{for(a=C>2?V[2]:
+"jkl pq";i;i--)*n++=i<25||i%12<2?7:0;srand(getpid());system("stty raw -echo");
+signal(14,t);t();puts("\033[H\033[J");for(n=f+rand()%7*4;;g(7),u(),g(0)){if(c<
+0){if(G(x+12))x+=12;else{g(7);++w;for(j=0;j<252;j=12*(j/12+1))for(;q[++j];)if(
+j%12==10){for(;j%12;q[j--]=0);u();for(;--j;q[j+12]=q[j]);u();}n=f+rand()%7*4;G
+(x=17)||(c=a[5]);}}if(c==*a)G(--x)||++x;if(c==a[1])n=f+4**(m=n),G(x)||(n=m);if
+(c==a[2])G(++x)||--x;if(c==a[3])for(;G(x+12);++w)x+=12;if(c==a[4]||c==a[5]){
+printf("\033[H\033[J\033[0m%d\n",w);if(c==a[5])break;for(j=264;j--;Q[j]=0);
+while(getchar()-a[4]);puts("\033[H\033[J\033[7m");}}system("stty cooked echo")
+;d=popen("cat - HI|sort -rn|sed -n 1,20p>/tmp/$$;mv /tmp/$$ HI;cat HI","w");
+fprintf(d,"%4d on level %1d by %s\n",w,l,getlogin());pclose(d);}
+\end{verbatim}
+\caption{\label{obfuscate} The winner of the 1989 obfuscated C contest.  It
+is a valid, working C program that lets you play Tetris on UNIX -- it even
+keeps a list of high scores!}
+\end{figure}
+
+     In this section, we will examine some stylistic conventions to
+be used with C, as well as indicate how greater readability and
+portability can be achieved.
+
+     The great  advantage which  UNIX and  C provide  is the 
+``software tool'' \index{software tool}\index{style!software tool}philosophy upon which they are based. A software
+tool (as defined by Kernighan and Plauger in their excellent book 
+{\em Software Tools\/}) is a program that:
+\begin{itemize}
+\item  solves a general problem, not a special case, and
+\item  is so easy to use that people will use it rather than write their
+own.
+\end{itemize}
+     Many of  the UNIX  utilities are  software tools.  In fact, 
+unlike  most operating systems  which are  large complex programs,
+UNIX consists of a small program called  the {\kc kernel},  which is 
+responsible for  only  the  most  basic functions. All other
+operating system tasks are performed by software tools written in C (or
+the UNIX shell command language).
+
+     In order  to write  a good UNIX software tool, there are some
+conventions that should  be followed.  The tool should solve a
+single, general problem, to keep its  use as simple as possible.
+Wherever possible, it should be a {\kc filter}; that is,  it should
+read its input from the standard input and send its output to the
+standard output. This means that the program can be used in
+conjunction with other  programs and the UNIX I/O redirection
+commands and especially pipes, to create even more powerful tools. 
+Some stylistic guidelines follow.  For a more thorough treatment of the
+topic (as well as writing portable code), refer to appendices~\ref{style}
+and \ref{portable} containing recent papers on the subject.
+
+     First of all, \index{style!functions}functions should perform 
+single logical operations
+wherever possible. Functions  should be  kept short  (about 20 lines
+is a good length), and should be preceded by comments explaining what
+they do, what the arguments are for,  and what  is returned,  if
+anything.  Any piece  of code  within the function whose  purpose
+may  seem obscure  should also  be commented. Wherever possible,
+allow  only one  entrance to  and one exit out of a function or compound
+statement.
+
+     Macro names  \index{style!macros}should be  used wherever  possible  to  represent 
+important constants. It  is conventional  in C  to use upper case
+names for such macros.  \index{style!identifier names}Identifier names  should be  a compromise 
+between meaningfulness and brevity.  Similarly, {\cd typedef} should
+be used to simplify declarations.
+
+     Lines should  be kept  short, and  indentation used  to show the
+relative nesting of  statements.  Three-column indentations are
+recommended.
+Complex  expressions that are often repeated should  be made 
+into functions if possible, or named using macros.  For example:
+\begin{code}
+\#define QUADROOT1(a,b,c) \= \kill
+\#define DISCRIM(a,b,c) \>   (sqrt((b)*(b)-4*(a)*(c))) \\
+\#define QUADROOT1(a,b,c) \> ((-(b)-DISCRIM(a,b,c))/(2*(a))) \\
+\#define QUADROOT2(a,b,c) \> ((-(b)+DISCRIM(a,b,c))/(2*(a)))
+\end{code}
+\noindent
+     would allow  us to  use the  macros {\cd QUADROOT1}  and {\cd
+QUADROOT2}  in place of complex expressions for the roots of
+quadratic equations.
+
+     The number of files {\cd \#include}d, apart from the standard
+library .h files,  should be kept small.
+
+     Closely related  functions should  be kept  in the  same file.
+The use of {\cd continue}, and  especially {\cd goto}, is strongly
+discouraged, as it is often a sign of a badly structured function.
+
+     While these  points may  reduce the efficiency of programs
+slightly, good program and  data structure  design are far more
+important efficiency factors.  The small price to pay for readable
+programs is well worth it.
+
+     For a  software tool  to be  truly useful,  there are some
+user-interface conventions which should be followed. 
+\index{style!UNIX command line format}Firstly, you
+should use {\cd argc} and {\cd argv} to enable the  program to be
+invoked using the UNIX standard command format. This is:
+\begin{display}\ms
+ program  $[$options$]$  $[$files$]$
+\end{display}
+\noindent
+     Options must begin with a dash {\cd -} and may take the form:
+\begin{display}\ms
+{\cd -}options
+\end{display}
+\noindent
+or   
+\begin{display}\ms
+{\cd -}option\/ {\cd -}option \ldots
+\end{display}
+\noindent
+ The first form is only allowed for options that don't take arguments.
+
+     The convention  is that output from the program should be sent
+to {\fn stdout}, unless the {\cmd -o}{\ms file\/}  option is  used,
+which  specifies which file the output should be  sent to. Any error
+messages or diagnostics should be sent to {\fn stderr}.  This
+prevents interference with output that might be piped as input to some
+other process.
+
+     The optional  {\ms files\/} argument  specifies a  list of  
+files to be used for input, one  at a  time. If  no files  are
+given,  {\fn stdin} should  be used  as  a default. This  convention
+allows  the use  of UNIX  wild  card characters  as  file arguments.
+
+     UNIX programs  such as  {\cmd cc} follow  the convention  that
+``no news is good news.''  While this can sometimes be disconcerting, 
+it does have  its merits,  as  no unnecessary  information  is
+produced to clutter output and prevent piping of output to other
+routines.
+
+     Many UNIX  utilities and  filters are  written specifically  to
+deal with text files.  Thus, by  making the  input and  output data
+from your files text wherever possible, you have access to all of
+these utilities.
+
+     \index{style!portability}Portability can  often be  improved  using  conditional 
+compilation  and macros. A  good example  of this  is the  {\cd FILE}
+type  in the {\fn stdio.h} file. Some systems use  pointers to 
+structures for  file pointers (usually pointing to a structure 
+containing  information  about  the  file,  including  the  current
+position), while  others use  pointers to  int (usually  just an 
+index into a table of  file descriptors).  While these  are
+essentially the same (as we can regard an  index into a table as
+being an address of an element of the table), they are declared
+differently. To declare a file, we would use
+\begin{code}
+struct file\_info *fp;
+\end{code}
+\noindent
+     in the first case and
+\begin{code}
+int *fp;
+\end{code}
+\noindent
+     for the second. Suppose we wish  to write  portable programs  for  two
+machines,  XYZ and 
+ ABC, respectively.  Assume furthermore that on XYZ {\cd int}s are 16 bits,
+whereas on ABC they are 32 bits, and that we want them to be 32 bits. On
+XYZ we would use
+\begin{code}
+typedef struct file\_info *FILE;
+\end{code}
+\noindent
+     in the {\bf stdio.h} file, while on  ABC we would use
+\begin{code}
+typedef int *FILE;
+\end{code}
+\noindent
+     We could  incorporate this  into our own program as follows
+(there is not much point to the  {\cd FILE} example,  as it  is done  for
+us  by {\fn stdio.h},  but it illustrates the point):
+\begin{code}
+       \#define XYZ  \tab /* Define which machine we are on */ \addVspace
+
+       \#ifdef XYZ					 \\
+       typedef int long; \tab /* redefine ints to be 32 bits */ \\
+       typedef struct file\_info *FILE;			   \\
+       \#else						   \\
+       \#ifdef ABC					   \\
+       typedef int *FILE;				   \\
+       \#else						   \\
+       No machine defined!				   \\
+       \#endif						   \\
+       \#endif
+\end{code}
+\noindent
+     The line  {\cd No machine  defined!} will be rejected by the
+compiler, thus you will have to define the machine before you can
+successfully compile and run.
+
+     The \index{cpp@{\cmd cpp}}preprocessor option {\cmd -D}{\ms identifier\/} can also be
+used here. This option causes {\ms identifier\/} to be defined to the
+preprocessor. Instead of explicitly defining the  machine in  the
+program,  we could specify it as the {\cmd -D} argument to {\cmd cc}, 
+for example, 
+\begin{display}\cmd
+ cc -DXYZ myprog.c
+\end{display}
+     
+
+\section{Common Mistakes}
+\index{debugging}
+     Debugging a  C program  can be  as easy  or difficult  as you
+make it for yourself. Well-structured,  readable code  simplifies the
+task considerably to start with.  Another good  practice is  to
+develop the program bit-by-bit (say three or four functions at a
+time), thoroughly testing each part before moving on. C  aids this 
+process, by allowing us to put all top-level declarations in an {\cd
+\#include} file, and then keep all well-tested functions in one file,
+and the latest untested  additions in  a second  temporary file. Once
+we are satisfied that the  latest additions  are working correctly,
+we can add them to the main file (using,  for example,  the UNIX {\cmd
+cat}  command), and  begin a new part in the temporary file.
+
+     C also  provides a  number of  useful tools to aid the debugging
+process; these are  described in the next section. Although it is
+impossible to predict likely errors  in  {\em a priori\/},
+there are a few features of C that are often incorrectly used. These
+include\index{debugging!common mistakes}:
+\begin{itemize}
+
+\item Using  {\cd =} instead  of {\cd ==}  in  equality  tests,  thus 
+performing  an unwanted assignment, and returning an arbitrary value
+(the right-hand side of the assignment).
+
+\item Failing  to  terminate  a  statement  with  a  semicolon;  this 
+is particularly the case just before {\cd else} statements.
+
+\item Failing  to use {\cd break} statements within a {\cd switch}; 
+in most cases, we don't want  to continue  processing all  statements
+to the end of the switch, but only those in the particular {\cd
+case}; thus we need a {\cd break} statement at the end of the case.
+
+\item Using  a semicolon  at the  end of  the argument list in a
+function definition, thus  making that  line look  like  a  function 
+call instead.
+
+\item Forgetting to use the {\ms address of\/} operator ({\cd \&}) in
+calls to {\cd scanf} and other functions requiring pointer arguments.
+
+\item Forgetting  to close  {\cd FILE}s that  have been opened.  While
+this will not cause an error, some systems may not close the files or
+flush the buffers, leading to incomplete I/O.
+
+\item Incorrect use of pointers.
+
+\item Failing  to ensure  that operator precedences in expressions are
+correct (if in doubt, use parentheses).
+
+\item \index{macros!dangers of}Using arguments with 
+{\em side-effects} within macros. For example, if we have:
+\begin{code}
+\#define toupper(c) \tab (c>='a' \&\& c<='z') ?\ c+'A'-'a' :\ c
+\end{code}
+\noindent
+and then call the macro with
+\begin{code}
+void copy\_upper(s1, s2) \\
+\>char *s1, *s2; \\
+\{ \\
+\>while( *s1++ = toupper(*s2++) ); \\
+\}
+\end{code}
+\noindent
+only every second character will be copied and, if we are unlucky,
+the null byte at the end of {\cd s2} will be missed with the result that the 
+loop will not terminate properly.
+
+\item Failing  to propagate changes made  to the  program throughout  the
+whole program. This  is particularly  so with  functions; if you
+change the parameter  list of a function, make sure you change all
+calls to the  functions as  well, as  C performs  no checks on
+function calls, but simply performs them.
+
+\end{itemize}
+     Bearing these  points in  mind could save a reasonable amount of
+time and effort. Of course, the best way to improve debugging skill
+is through practice -- the  more you program, the less mistakes you
+are likely to make in the first place, and  the more  experience you 
+will have with identifying those that do occur.

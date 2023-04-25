@@ -1,0 +1,39 @@
+Practical Session 5
+
+1) We  now want  to generalise do_menu so that it can get string or character
+responses. Begin  by changing  do_menu to  take a further (integer) argument,
+res_len (expected  response length).  The whole body of do_menu should now be
+put in  a do  loop, except the return CONT, which should come at the end. The
+do loop should terminate when the first character of response is not zero.
+
+2) Now,  only if  the expected response length is 1 to we put the (upper case
+version of)  the first character of buff in *response. Otherwise, we copy the
+whole of buff into response using strcpy.
+
+3) Furthermore,  if the  expected response  length is  1, we  want  to  check
+whether  the   response  is  valid.  Firstly,  ensure  the  response  was  an
+alphanumeric character  (use isalnum);  then check  that it  is in  the valid
+response string  (if it  isn't, strchr(valid_res,*response) will be NULL). If
+both of these cases hold, we can break out of the loop. Otherwise, we have an
+error ("Invalid  response"), and  reset the  first character of response to 0
+(to make sure we loop again).
+
+4) We  are almost  ready to complete the menu driver for the program. Write a
+function options()  which repeatedly calls do_menu appropriately for the menu
+optmenu, until  do_menu returns  QUIT. If  do_menu returns CONT, the returned
+command should be acted upon (using getvalue or TOGGLE).
+
+5) Write a function, fileopts(), which, similarly to options(), calls do_menu
+repeatedly, this  time for  filemenu. The  function should return CONT at the
+end, unless  the menu response 'Q' was obtained, in which case QUIT should be
+immediately returned.  For the  remaining options,  view should  be set to an
+appropriate macro constant value, or options() should be called.
+
+6) Write  a function  getfile() which has a 'local' external variable file (a
+character array for the file name). The function should call do_menu with the
+menu topmenu,  to get  a filename  in file.  If  do_menu  returns  QUIT,  the
+function should call exit(0) to terminate the program.
+
+7) Change the main function so that it calls getfile(), then repeatedly calls
+fileopts(), to  test whether  your menu  driver  functions  are  all  working
+correctly.

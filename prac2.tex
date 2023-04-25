@@ -1,0 +1,24 @@
+Practical Session 2
+
+1) Modify the detab program so that we can set the value of TABSTOP at
+compile-time. The program should default to TABSTOP 8 if not otherwise
+specified.
+
+2) Test this program with TABSTOP defined to be 4.
+
+3) Modify the detab program so that it prompts for and reads the
+tabstop value. Test this program.
+
+4) Change the detab program so that the main loop is put into a
+function called 'detab'. This function should take an integer argument
+'tabstop'. The main function should just prompt for and read tabstop,
+and call detab.
+
+5) Change the detab FUNCTION so that it returns the number of tab
+characters in the file. main() should print this out at the end.
+
+6) Change the detab FUNCTION so that it returns the (number of spaces
+inserted instead of tabs - number of tab characters in file). Change
+main() to print this out at the end, using the format "%d more
+bytes\n".
+

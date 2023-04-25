@@ -1,0 +1,562 @@
+
+\section{Type Conversions and Pointers to Functions}
+\index{types!conversions}
+\index{functions!pointers to}
+\index{pointers!to functions}
+
+     We have  seen that the differences between types in C are
+actually small:  integers, pointers  and arrays  all have
+similarities, and  characters can be treated as  small integers. This
+fact means that converting between types in C is easy.
+
+     C performs  many implicit  type conversions itself. For example,
+an array declaration is  converted into a pointer declaration, and a
+string constant is converted into  a pointer  to {\cd char}.  When a
+function is defined, a  constant having the function name is actually
+created. This constant is of type {\ms pointer to function returning 
+t\/}, where  {\ms t\/} is  the return  type of  the function. Thus, a
+function   call  in  C  actually  consists  of  a constant pointer name, 
+followed  by parentheses which  may contain expressions representing
+arguments. The effect of this is the following:
+ \begin{itemize}
+\item Any arguments are evaluated and saved on the program stack.
+
+\item Execution  passes to  the code  in the  {\bf .text} section
+\index{text@{\bf .text}}    being pointed to by the pointer.
+\end{itemize}
+     Furthermore, when calling a function with arguments, 
+\index{arguments!type conversions of}
+\index{types!conversions!of function arguments}{\cd char}s
+and {\cd short}s are converted to  {\cd int}s, {\cd float}s  are
+converted to {\cd double}s, and arrays are converted to pointers
+before they  are stacked  and the  function  called.  This  makes
+argument passing much simpler for the compiler to handle.
+
+Note that we can declare a variable of type {\ms pointer to function 
+returning a type t} with:
+ \begin{code}
+t    (*pf)();
+\end{code}
+\noindent
+     We can then assign a value (the address of a function) to this 
+variable and call the function which is being pointed to with:
+\begin{code}
+(*pf)({\ms arguments\/});
+\end{code}
+\noindent
+Note the difference between the above declaration and {\cd t pf()}
+and {\cd t *pf()}.  The latter two declarations both define functions
+as opposed to a pointer to a function.  The first defines a function
+returning a value of type {\cd t}, while the second defines a function
+returning a value of type {\ms pointer to\/} {\cd t}.
+
+     Assignment statements often cause type conversions. You can
+mix most of the  types we  have so  far considered,  but
+indiscriminate type mixing may cause errors, particularly if
+converting long types to shorter ones, or {\cd float}s to {\cd int}s.
+
+     You can specifically request C to perform a type conversion for
+you\index{types!conversions!explicit}. This is known  as {\ms type  casting}. To  cast a  variable to a
+type,  we  precede  the variable with the desired type name in
+parentheses, for example:
+\begin{code}
+mmm\= truncate(n) \tab\tab \= \kill
+float truncate(n) \>\> /* Remove fractional part */ \\
+\> float n;         \> /* of a float             */ \\
+\{ \\
+ \>   return (float)((long)n); \\
+\}
+\end{code}
+
+
+\section{More Complex Declarations}
+\index{declarations!complex}
+\index{arrays!multi-dimensional}
+\label{complxDecl}
+     We now  have sufficient  tools for more complex declarations.
+Firstly, we can have  {\kc multi-dimensional arrays}.  There is  no
+fixed limit on the number of dimensions (although  some systems may
+have restrictions). To declare an array of more  than one  dimension,
+we  simply add the size specifiers for the other dimensions. In other
+words, to declare {\cd a}, a $d_{1} \times  d_{2}
+\times \ldots \times  d_{n}$ array of type {\cd t}, we use:
+\begin{code}
+t  a[$d_{1}$][$d_{2}$]\ldots[$d_{n}$];
+\end{code}
+\noindent
+     We access the element at $(i_{1}, i_{2}, \ldots, i_{n})$ with
+\begin{code}
+a[$i_{1}$][$i_{2}$]\ldots[$i_{n}$]
+\end{code}
+\noindent
+     The array/pointer  equivalence still  holds; in particular, we
+could also access the above element with:
+\begin{code}
+*( *(...*( *(a + $i_{1}$) + $i_{2}$)...) + $i_{n}$)
+\end{code}
+\noindent
+     We have  seen before  that we  can access  variables declared in
+other files by using {\cd extern} \index{extern@{\cd extern}}declarations. 
+We can have any
+number of {\cd extern} declarations for a variable, provided  there
+is  one and only one declaration  of that  variable which  is the
+{\kc defining declaration}\index{declarations!defining}; that is, there is a declaration
+somewhere which creates the variable  and tells the  compiler
+everything it needs  to  know about  that variable\footnote{The
+defining declaration must not have the keyword {\cd extern} in it}. 
+With  the exception of  defining declarations, we do not have to
+specify the size of the first  dimension  of  a  C array, but all 
+other dimensions  must  be specified.  This is  allowed since only
+the defining declaration  causes storage to be allocated for the
+variable.  Any other  declaration (including formal parameters in
+functions) does not cause storage to be allocated; nevertheless,  the
+dimension sizes must be known for all except the first dimension  so
+that  the compiler  can tell how to access the elements of the
+array.  The first  dimension is  unnecessary as  C does  not check
+whether subscripts are out of range.
+				  
+To make this a bit clearer, consider the following code:
+\begin{code}
+extern int tbl[][ENTRYSIZE]; /* Not a defining declaration */
+\addVspace
+
+printdown(str) \\
+char str[]; \tab  /* Function argument */ \\
+\{ \\
+ \> \vdots	\\
+\} \addVspace
+
+int tbl[ENTRIES][ENTRYSIZE]; \tab  /* defining decl. */
+\end{code}
+\noindent
+ If we want to access the element {\cd tbl[i][j]}, the compiler
+must be able to calculate the address of that element. The array is
+stored in the row order:
+\begin{display}\cd
+  tbl[0][0], tbl[0][1], \ldots, tbl[0][ENTRYSIZE-1], tbl[1][0], \\
+  \ldots, tbl[1][ENTRYSIZE-1], \ldots, tbl[ENTRIES-1][0], \ldots, \\
+  tbl[ENTRIES-1][ENTRYSIZE-1]
+\end{display}
+\noindent
+     To access the element {\cd table[i][j]}, the compiler evaluates:
+\begin{code}
+tbl + (i * ENTRYSIZE + j) * sizeof(int)
+\end{code}
+\noindent
+     This is  the address  of the  required element. As can be seen,
+we do not need the value of {\cd ENTRIES} to calculate it.
+
+     Note the values returned by {\cd sizeof} in the following examples:
+\begin{display}\cd
+\begin{tabular}{@{}ll@{}}
+  sizeof(tbl) &      {\rm is}  ENTRIES * ENTRYSIZE * sizeof(int) \\
+  sizeof(*tbl) &    {\rm is}  ENTRYSIZE * sizeof(int)	    \\
+  sizeof(tbl[0]) &  {\rm is}  ENTRYSIZE * sizeof(int)	    \\
+  sizeof(**tbl) &   {\rm is}  sizeof(int) \\
+  sizeof(tbl[0][0]) & {\rm is}  sizeof(int)	
+\end{tabular}
+\end{display}
+\noindent
+     We can form compound declarators from the array ({\cd
+[]}), function ({\cd ()}) and pointer ({\cd *}) declarators. The only
+restrictions are:
+\begin{itemize}
+\item {\cd void} can only be used for functions returning {\cd void};
+\item arrays  of functions  are not  allowed, although  arrays of
+pointers to functions are; 
+\item functions may not return arrays or functions.
+\end{itemize}
+     Function and  array  declarators  have  higher  precedence  than 
+pointer declarators, thus:
+\begin{display}
+\begin{tabular}{@{}lp{.6\textwidth}@{}}
+ {\bf The declaration}  & {\bf Declares:} \addVspace
+ {\cd float s();}      & a function returning a {\cd float} \\
+ {\cd float *s();}     & a function returning a pointer to a {\cd float} \\
+ {\cd float (*s)();}   & a pointer to a function returning a {\cd float} \\
+ {\cd float *(*s)();}  & a pointer to a function returning a pointer
+								 to a {\cd float} \\
+ {\cd char (*p[])();}  & an array of pointers to functions 
+ 								 returning {\cd char} \\
+ {\cd int (*pf)();}    & a pointer to a function returning an {\cd int} \\
+ {\cd void *f();}      & {\bf illegal:} the type ``pointer to {\cd
+								 void}'' is not allowed
+\end{tabular}
+\end{display}
+\noindent
+     While some of the more complex  declarations are not often used,
+it is useful to know how to read and write them correctly.
+
+     We are  now in a position where we know how to define and call
+functions, how to  send and  receive values to and from functions,
+and how to create many different types  of variables. It is time to
+increase our ability to do things with these. Enter the C {\kc
+operators}.
+
+
+\section{Operators}
+\index{operators}
+     There are  places in  our program  that we  need values  (for
+example, as arguments, or  for the  right-hand side  of
+assignments).  Wherever a value is needed, we  can use  an  {\kc
+expression}.  For  example,  a  function  call  is  an expression,
+provided  that the function returns a value. In order to have more
+complex expressions  than just  values, we  can use  operators.
+We have already seen some of C's {\kc arithmetic operators}.  The
+complete list is\index{operators!arithmetic}:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+       {\cd a+b}  &   add {\cd a} and {\cd b} \\
+       {\cd a-b}  &   subtract {\cd b} from {\cd a} \\
+       {\cd a*b}  &   multiply {\cd a} by {\cd b} \\
+       {\cd a/b}  &   divide {\cd a} by {\cd b} \\
+       {\cd a\%b}  &  find the remainder if {\cd a} is divided by {\cd b} 
+							 (i.e.\ {\cd a} {\it mod\/} {\cd b}) \\
+       {\cd -a}   &   negate {\cd a} (i.e.\ unary minus)
+\end{tabular}
+\end{display}
+\noindent
+     C provides  a set  of {\kc bitwise operators\/} for manipulating
+bit patterns in memory. The operators are\index{operators!bitwise}:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+       {\cd a<<b} &   shift {\cd a} left by {\cd b} bits \\
+       {\cd a>>b} &   shift {\cd a} right by {\cd b} bits \\
+       {\cd a | b} &  find {\cd a} {\sc inclusive-or} {\cd b} \\
+       {\cd a \caret b} &  find {\cd a} {\sc exclusive-or} {\cd b} \\
+       {\cd a \& b} &  find {\cd a} {\sc and} {\cd b} \\
+       {\cd   \verb+~+a}  &  complement {\cd a}
+\end{tabular}
+\end{display}
+\noindent
+     Similar to these, there are {\kc logical operators\/} for
+combining truth values (Booleans).  Recall that C regards zero as
+being  false and any other value as true, with  1 being  the  
+canonical  true.  Using  this convention, truth  values  in  C  may 
+be  any expression, although they will typically be the result of
+some comparison. The logical operators are\index{operators!logical}:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+ {\cd a \&\& b} & true if both {\cd a} and {\cd b} are true; false otherwise \\
+ {\cd a || b} &  true if either {\cd a} or {\cd b} is true; false otherwise \\
+ {\cd !a} &  true if {\cd a} is not true; false otherwise
+\end{tabular}
+\end{display}
+\noindent
+  In order to compare values  there are {\kc comparison operators}.
+These are\index{operators!comparison}:
+\begin{display}
+\begin{tabular}{@{}lp{.6\textwidth}@{}}
+ {\cd a > b}   &  true if {\cd a} is greater than {\cd b}; false otherwise \\
+ {\cd a >= b}  &  true if {\cd a} is greater than or equal to {\cd b}; 
+ 						false otherwise \\
+ {\cd a == b}  &  true if {\cd a} equals {\cd b}; false otherwise \\
+ {\cd a != b}  &  true if {\cd a} is not equal to {\cd b}; false otherwise \\
+ {\cd a <= b}  &  true if {\cd a} is less than or equal to {\cd b}; 
+ 						false otherwise \\
+ {\cd a < b}   &  true if {\cd a} is less than {\cd b}; false otherwise
+\end{tabular}
+\end{display}
+\noindent
+     One should be particularly careful about the equality comparison operator
+{\cd ==}, as it is easy to use {\cd =} by mistake. If this
+happens, an assignment is done instead of a comparison, often with
+disastrous results.
+
+We have  already met  the {\kc indirection  operators\/} {\cd *}
+and {\cd \&}, as well as the {\kc cast operator\/}, {\cd ({\ms
+type\/})}, and  the basic assignment operator, {\cd =}. C allows us
+to abbreviate a common form of assignment. The assignment
+\begin{display}\ms
+lvalue {\cd =} lvalue operation expression {\cd ;}
+\end{display}
+\noindent
+     may be abbreviated to:
+\begin{display}\ms
+lvalue operation\/{\cd =} expression {\cd ;}
+\end{display}
+\noindent
+     For  example,  {\cd a=a+5;} can be written as {\cd a+=5;}  An
+{\ms lvalue\/} is an expression that refers  to memory  that can  be
+examined and altered (the name comes from {\ms l\/}eft  {\ms value},  
+as  only  {\em lvalues}  are  allowed  on  the  left-hand  side  of
+assignments).  Thus  all variables  are lvalues,  as are  all pointer 
+contents (that is, expressions of the form {\cd *p} where {\cd p} is
+a pointer).
+
+     The operations which are permissible as {\kc assignment
+operators\/} are\index{operators!assignment}:
+\begin{display}\cd
+\begin{tabular}{@{}ccccc@{}}
+ +=  & -=  & *=  & /= & \%= \\
+ >>= & <<= & \&= & |= & \caret=
+\end{tabular}
+\end{display}
+\noindent
+     It often  happens in  a program that you wish to add or subtract
+one from an lvalue.   C  provides special {\kc increment and 
+decrement operators}\index{operators!increment}\index{operators!decrement}:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+ {\cd ++a} & preincrement: add one to a and return its new value \\
+ {\cd --a} & predecrement: subtract one from a, returning its new value \\
+ {\cd a++} & postincrement: add one to a but return its old value \\
+ {\cd a--} & postdecrement: subtract one from a but return its old value
+\end{tabular}
+\end{display}
+\noindent
+     These are  very useful  for loops and for manipulating array
+indexes. For example:
+\begin{code}
+ printdown(s) \\
+ \> char *s; \\
+ /* Prints a string down the screen */ \\
+ \{ \\
+ \> while( *s ) printf("\%c\verb+\+n",*s++); \\
+ \}
+\end{code}
+\noindent
+(The {\cd while} statement is described in Section~\ref{while_st}. {\cd while}
+loops terminate when the parenthesised expression has the value zero.)
+     The increment and decrement operators  also support  C pointer
+arithmetic\index{pointers!arithmetic}.   If we apply them to pointer types, the increment
+or decrement is by the size of the object pointed to in bytes (i.e.\
+by one ``object''). In our example above, the {\cd s} pointer is incremented by
+single characters (bytes) at a time, moving through the string until it reaches
+the null character, at which point the {\cd while} loop terminates.
+
+Beware of using the increment and decrement operators in arguments to
+macros. Because macros simply involves textual replacements, the
+increment/decrement operator might be applied more times than what is
+intended\index{macros!dangers of}.
+
+
+\section{Precedence of Operators}
+\index{operators!precedence of}
+\index{operators!associativity of}
+     Now that we have operators to work with, we can form complex
+expressions.  However, we  must take into account  operator 
+precedence and  associativity. The {\kc precedence} of  an
+operator  indicates how tightly it groups. When there is a choice
+in  the order  in which  to apply  operators, the  operator with
+higher precedence is always performed first. For example,
+multiplication has a higher precedence  than   addition,  as  it  is 
+always  performed  first;  thus  the expression:
+\begin{code}
+a+b*c
+\end{code}
+\noindent
+     groups as:
+\begin{code}
+a+(b*c)
+\end{code}
+\noindent
+     When there is a choice of operators and they have the  same
+precedence, we use the  associativity to  determine grouping. 
+An  operator  which  is {\kc left-associative\/} always  groups left 
+first,  while  a {\kc right-associative\/}  operator groups right
+first. Thus:
+\begin{code}
+ a+b+c
+\end{code}
+\noindent
+     groups as:
+\begin{code}
+ (a+b)+c
+\end{code}
+\noindent
+     because addition is left-associative, while:
+\begin{code}
+ **p
+\end{code}
+\noindent
+     groups as:
+\begin{code}
+ *(*p)
+\end{code}
+\noindent
+     because  {\cd *}   (indirection)  is  right-associative.  A 
+table summarising  the operators, their precedences and
+associativities, is given in Table~\ref{precedence}.
+\begin{table}\centering
+\index{operators!precedence of}
+\index{operators!associativity of}
+\caption{\label{precedence}C Operators and Precedence.}
+\par\medskip\noindent
+\begin{tabular}{|llll|} \hline
+ & & & \\
+    Precedence & Associativity & Operators    &       Description \\ 
+ & & & \\
+\hline
+ & & & \\
+   16 & &           identifiers, constants & \\
+   16 & Left  &             {\cd []}   &         array subscripting \\
+   16 & Left   &  {\cd ()}      &         function call \\
+   16 & Left   &  {\cd .}       &         direct selection \\
+   16 & Left    &  {\cd ->}       & indirect selection \\
+   15 & Right   &  {\cd ++\tab--} & post-inc/decrement \\
+   14 & Right   &  {\cd ++\tab--} & pre-inc/decrement \\
+   14 &         &  {\cd sizeof}     &         size \\
+   14 & Right   &  {\cd  ({\ms type})}   &         type cast \\
+   14 & Right   &  {\cd \verb+~+}         &         bitwise {\sc not} \\
+   14 & Right   &  {\cd  !}          &         logical {\sc not} \\
+   14 & Right   &  {\cd -}          &         arithmetic negation \\
+   14 & Right   &  {\cd \&}         &          address of \\
+   14 & Right   &  {\cd *}          &         contents of \\
+   13 & Left    &  {\cd * \tab/ \tab\%} &        multiplicative \\
+   12 & Left    &  {\cd + \tab-}     &        additive \\
+   11 & Left    &  {\cd <<\tab>>}     &        left and right shift \\
+   10 & Left    &  {\cd <=\tab>=\tab<\tab>} &  inequality \\
+   9  & Left    &  {\cd ==\tab!=}      &       equality/inequality \\
+   8  & Left    &  {\cd \&}          &         bitwise {\sc and} \\
+   7  & Left    &  {\cd \caret}          &        bitwise {\sc xor} \\
+   6  & Left    &  {\cd |}           &        bitwise {\sc or} \\
+   5  & Left    &  {\cd \&\&}        &          logical {\sc and} \\
+   4  & Left    &  {\cd ||}          &        logical {\sc or} \\
+   3  & Right   &  {\cd ?:}          &        conditional \\
+   2  & Right   & {\cd \begin{tabular}[t]{@{}llll@{}}
+                    =  & +=  & -=  & *= \\
+		  /= & \%= & \&= & \caret= \\
+		  |= & <<= & >>=
+		  \end{tabular}}      &  assignment \\  
+   1  & Left    & {\cd ,}                 &  sequential \\
+ & & & \\ \hline 
+\end{tabular} 
+\end{table} 
+ The array operator {\cd []} and  the function operator {\cd ()} have
+been discussed in Section~\ref{complxDecl}, while the operators {\cd
+.}\ and {\cd ->} (which are used  for accessing  the components  of
+structures and unions) will be described later.
+
+
+\section{Expressions}
+\index{expressions}
+     An expression in C can be any one of the following:
+\begin{itemize}
+\item a numeric, character or string constant
+\item an identifier
+\item an expression in parentheses {\cd ()}
+\item an array element
+\item a function call
+\item a  unary expression
+\item a  binary expression
+\item a  conditional expression
+\item an  assignment expression
+\item a  sequential expression
+\item a  constant expression
+\end{itemize}
+     There are other types; these involve more complex data types that
+we have not introduced yet.
+
+     A {\kc unary expression\/} \index{expressions!unary}consists of a  unary operator and a
+single operand. The unary operators are:
+\begin{display}
+\begin{tabular}{@{}lll@{}}
+ type casts & {\cd sizeof} & {\cd ++} \\ 
+ {\cd --} &  {\cd -} (unary minus) & {\cd !} (logical {\sc not}) \\ 
+ {\cd \verb+~+} (bitwise {\sc not}) &  {\cd \&} (address of) 
+   & {\cd *} (contents of)
+\end{tabular}
+\end{display}
+\noindent
+     A {\kc binary  expression\/} \index{expressions!binary}consists  of a  two operands
+separated by a binary operator. The binary operators are:
+\begin{display}
+\begin{tabular}{@{}l@{\ }ll@{\ }ll@{\ }l@{}}
+ {\cd +} & add       & {\cd -} & subtract    & &  \\
+ {\cd *} & multiply  & {\cd /} & divide      &    {\cd \%} & remainder \\
+ {\cd <<} & shift left& {\cd >>} & shift right & & \\
+ {\cd !=} & not equal to & {\cd <} & less than & {\cd >} & greater than \\
+ {\cd ==} & equal to & {\cd <=} & less or equal 
+   & {\cd >=} & greater or equal \\
+ {\cd \&} & bitwise {\sc and} & {\cd |} & bitwise {\cd or} 
+   & {\cd \caret} & bitwise {\sc xor} \\
+ {\cd \&\&} & logical {\cd and} & {\cd ||} & logical {\cd or}  & &
+\end{tabular}
+\end{display}
+\noindent
+     A {\kc conditional expression\/} \index{expressions!conditional}has the form:
+\begin{display}\ms
+ expression1 {\cd ?} expression2 {\cd :} expression3
+\end{display}
+\noindent
+     The first  expression is  evaluated; if  it  is  true,  then the
+second expression is  used as  the value of the conditional
+expression. If the first expression is false, the third expression is
+used instead.  We can  therefore read the conditional expression  
+{\ms e1\/{\cd ?}e2{\cd :}e3} as:  ``If {\ms e1\/} then {\ms e2\/}
+else {\ms e3\/}'' For example, we can declare macros to return the
+greater and smaller of two numbers as:
+ \begin{code}
+ \#define  min(a,b)\tab(a>b ? b :\ a) \\
+ \#define  max(a,b)\tab(a>b ? a :\ b)
+\end{code}
+\noindent
+     We have  used {\kc assignment expressions\/} 
+\index{expressions!assignment}already.  If you 
+are familiar with some other  language, you  may wonder why we have
+assignment expressions, when other languages  have assignment 
+statements. The  answer is  that  in  C,  an assignment is  both an 
+expression and  a statement:  an assignment expression returns the
+value of the right-hand side of the expression as the value of the
+whole expression.  If we  use the  assignment expression  as a
+statement, this value is  simply discarded.  The use of assignments
+as expressions will become more obvious later; two simple example will
+suffice for the time being.  
+
+Firstly, it allows us to perform multiple assignments, e.g.\
+\begin{code}
+a=b=c=-1;
+\end{code}
+\noindent
+The value of the expression {\cd c=-1} (which also happens to assign
+the value -1 to the variable {\cd c}) is -1, which is the value
+assigned to {\cd b}, etc.
+
+As a second example, consider the C run-time library 
+function {\cd getchar()}, which reads and returns a character from
+standard input. We could write the following:
+\begin{code}
+    char c; \\
+    int size; \addVspace
+
+	 printf("Do you have a 132 character printer? (y/n)\verb+\+n"); \\
+    size = ((c=getchar())=='y') ? 132 :\ 80;
+\end{code}
+\noindent
+     Here we  call {\cd getchar}, assign the result to {\cd c}, and
+use the value assigned to  {\cd c}  immediately  within  the 
+conditional  expression.  Without  assignment expressions, we would
+have to use:
+\begin{code}
+         c = getchar(); \\
+         size = (c=='y') ? 132 :\ 80;
+\end{code}
+\noindent
+     in place of the last line.
+
+     A {\kc sequential  expression\/} \index{expressions!sequential}is  a list  of expressions,
+separated by commas.  Each expression  is evaluated in turn, and the
+value of each is discarded, except for the  last expression,  whose
+value  is returned  as the value of the whole sequential expression. 
+The main  use of  sequential expressions is for loops; these will  be
+explained later. Sequential expressions are also known as {\kc comma
+expressions}.
+
+
+     A {\kc constant  expression\/} \index{expressions!constant}is an expression that can be
+evaluated at compile-time (that  is, before the program is actually
+executed). These are needed for {\cd \#if} preprocessor  commands,
+array  size declarations,  and in a  few other places (which have  yet
+to  be dealt  with). Most  C operators are allowed for use in
+constant expressions, the main proviso being that they can be
+evaluated before execution. Constant  expressions in  {\cd \#if}
+commands are more restricted, as they must be  able to  be evaluated
+by the preprocessor, whereas all other constant expressions must  be
+evaluated by the compiler (which is far more powerful and has
+considerably  more information available to it. For example, the
+addresses of variables are known by the compiler but not by the
+preprocessor; thus if we have declared  {\cd static int  x;} we  can
+use  {\cd \&x} as  a constant expression in the program but not in
+preprocessor statements).
+

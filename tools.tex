@@ -1,0 +1,812 @@
+\cleardoublepage
+\chapter{Useful UNIX Tools}
+
+UNIX  provides us  with several tools to aid program development.
+These  include
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+{\cmd lint} & a  program checker \\
+{\cmd make, SCCS} &   program maintenance utilities \\
+{\cmd sdb, dbx} & interactive symbolic debuggers \\
+{\cmd ctrace} & a C trace utility \\
+{\cmd cxref} & a cross-reference generator \\
+{\cmd cb} & a  program ``beautifier'' \\
+{\cmd make, SCCS} &   program maintenance utilities \\
+{\cmd ar} & an archive (library) maintainer \\
+{\cmd size, nm} & provide information on compiled files \\
+{\cmd prof} & an execution profiler \\
+{\cmd time} & time the execution of programs
+\end{tabular}
+\end{display}
+\noindent
+ We will examine some of these in the sections that follow.
+
+
+\section{{\cmd lint} -- The C Program Checker }
+\index{lint@{\cmd lint}}
+     {\cmd lint} checks  C programs  for features  which are  likely
+to be bugs, non-portable, or  wasteful. It  provides stricter  type
+checking  than {\cmd cc}, and can find unreachable  statements, loops
+not entered  at the top, constant logical expressions, auto variables
+which  are declared  but  never  used,  functions called with varying
+numbers  of arguments,  and functions returning values that are
+not always (if ever) used.
+
+     {\cmd lint} is invoked by:
+\begin{display}\cmd
+lint $[${\ms options\/}$]$ {\ms files\/}
+\end{display}
+\noindent
+     {\ms files\/} is a list of files that are assumed to contain  a
+single  program,  and  are checked for mutual compatibility. Note
+that ``lint'' is a reserved word in {\cmd lint}, so the files should 
+not use  ``lint'' as  an identifier. 
+
+There is a large number of {\cmd lint} options, of which we will
+examine only a few.   Some of the main options are:
+\begin{display}
+\begin{tabular}{@{}lp{.7\textwidth}@{}}
+{\cmd -a} & Report assignments of longs to ints. \\
+{\cmd -b} & Report break statements that are unreachable. \\
+{\cmd -c} & Complain about non-portable type casts. \\
+{\cmd -h} & Don't attempt to guess at likely mistakes. \\
+{\cmd -n} & Attempt to check portability to IBM and GCOS C. \\
+{\cmd -p} & Report possible portability problems. \\
+ {\cmd -u} & Do  not complain  about functions  and variables  that are
+defined and never used  or vice-versa  (useful for checking files
+containing only part of a program). \\
+{\cmd -v} & Do not complain about unused function arguments. \\
+{\cmd -x} & Report all {\cd extern} declarations whose variables are never
+used.
+\end{tabular}
+\end{display}
+\noindent
+     The {\cd exit}  system call,  and other  functions that  never return,
+are not properly handled by {\cmd lint}.
+
+     {\cmd lint} allows  you to  use comments  within your files that
+will modify its behaviour from  that point.  Although their  effects
+are simple (for  example,  shutting  off strict  type   checking  in
+expressions), these are  likely to  be used only by experienced {\cmd
+lint} users.  Refer  to  the  UNIX Programmer's Reference  Manual
+volume  1 section  1 for  details, if  you  are interested in using
+these.
+
+
+\section{{\cmd make} -- A Program Maintenance Utility.}
+\index{make@{\cmd make}}
+Large C programs are usually split over numerous files. Sometimes,
+some of the files are compiled and put into libraries, which are then
+linked with the other files. Numerous header files can also exist,
+with each C file {\cd \#include}-ing different sets of header files.
+Obviously, if a file is changed, the program must be recompiled. This
+may entail remaking libraries if the changed file is a library
+component, or recompiling several C files if the changed file is a
+header file. Keeping track of all the {\kc dependencies\/} between
+files can become complex, and recompiling can be tedious. In an
+earlier section we saw how we could use shell scripts to control
+compilation, but these may not be adequate beyond a certain level of
+complexity. {\cmd make} is a tool which handles program maintenance
+automatically. It keeps track of file dependencies, and only performs
+those actions that are necessary to keep a program (or group of
+programs) up to date.
+
+In order to tell {\cmd make} what to do, a {\kc makefile} must be
+created. This file may have any name, but {\cmd make} will
+automatically use a default file if none is explicitly given. The
+allowed default filenames are {\fn makefile}, {\fn Makefile}, {\fn
+s.makefile} or {\fn s.Makefile}. The makefile specifies the
+dependencies between files, and the actions to be taken if a {\kc
+target\/} is older than one of the files upon which it depends.
+
+Each entry in the makefile is separated from others by one or more
+blank lines, and consists of a line specifying the target and its
+dependencies, followed by zero or more lines specifying the actions.
+Each of the action lines should begin with a {\sc tab} character.
+Consider a simple example. Say we have a program {\cd f} made up of files
+{\cd f1.c}, {\cd bf f2.c} and {\cd f3.c}, each of which uses the
+include file {\cd f.h}. The file {\cd f1.c} also uses an include file
+{\cd config.h}. A sample makefile for this situation would be:
+\begin{code}
+f: f1.o f2.o f3.o	 \tab	\# Target and dependencies \\
+\>	cc -o f f1.o f2.o f3.o \tab \# Action			  \addVspace
+
+f1.o: f1.c f.h config.h								  \\
+\>	cc -c f1.c												  \addVspace
+
+f2.o: f2.c f.h											  \\
+\>	cc -c f1.c												  \addVspace
+
+f3.o: f3.c f.h											  \\
+\>	cc -c f3.c												  
+\end{code}
+\noindent
+ Notice the use of {\cd \#} to specify comments. All text from a {\cd
+\#} to the end of that line is ignored by {\em make}.
+
+When we run {\em make}, it will examine the makefile. If any of the
+dependent files are newer than the targets, the actions associated with
+them will be performed. For example, if {\cd config.h} has just
+been edited, it is more recent than the target {\cd f1.o}. {\cd f1.c}
+will thus be recompiled to create a new, up-to-date version of {\cd
+f1.o}. This will then make the program {\cd f} out of date, so it
+will also be recompiled. After this, all the targets will be more
+recent than their dependencies, so {\em make} will exit.
+
+If a dependency file is not found, {\em make} will try to create it.
+It does this by looking for an entry which has that file as the
+target. If no such entry is found, {\em make} will report that it
+cannot find the file, and does not know how to make it.
+
+Make has a set of internal default rules that it will use if no
+explicit rule is given. Some of these are listed below:
+\begin{display}\cd
+\begin{tabular}{@{}lll@{}}
+\rm\bf Target & \rm\bf Dependent on	& \rm\bf Rule \\
+x.o  &	x.c  &	cc -c x.c \\
+x.o  &	x.s  &	as x.s	 \\
+x.a  &	x.c  &	cc -c x.c;ar rv x.a x.o;rm -f x.o 
+\end{tabular}
+\end{display}
+\noindent
+ {\em make} has an elementary macro facility. A macro can be defined by:
+\begin{code}
+macroname = string
+\end{code}
+\noindent
+A macro can then be used by:
+\begin{code}
+\$(macroname)
+\end{code}
+\noindent
+ Macros in {\em make} are mostly used for altering compiler options.
+For example, we may want to be able to turn symbolic debugging on or off
+during compilations at different stages. Instead of changing each
+action line, we can use a macro. Our makefile will now look like:
+\begin{code}
+CFLAGS = -g -c												\addVspace
+
+f: f1.o f2.o f3.o		\# Target and dependencies	\\
+\>	cc -o f f1.o f2.o f3.o  \# Action				\addVspace
+
+f1.o: f1.c f.h config.h									\\
+\>	cc \$(CFLAGS) f1.c									\addVspace
+
+f2.o: f2.c f.h												\\
+	cc \$(CFLAGS) f1.c									\addVspace
+
+f3.o: f3.c f.h												\\
+	cc \$(CFLAGS) f3.c
+\end{code}
+\noindent
+If we wish to disable symbolic debugging, we now need only to change the
+macro definition.
+
+{\em make} has several command-line options that can be specified.
+These include:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+\cmd -s &	Don't print command lines before executing them (silent
+				mode). \\
+\cmd -n &	Print commands to be performed; don't actually do them.\\
+\cmd -r &	Do not use the built in rules. \\
+\cmd -f{\ms file} &	Use {\em file\/} as the makefile
+\end{tabular}
+\end{display}
+
+\section{{\cmd SCCS} -- The Source Code Control System}
+\index{SCCS@{\cmd SCCS}}
+When systems are being developed, it is often useful to keep
+old versions of programs, for reference and also occasionally to
+recover a working version of a file when a line of development proves
+to be unsuccessful. The Source Code Control System (SCCS) is a
+collection of programs which allows multiple versions of programs to
+be stored in a space efficient way (rather than storing the programs,
+only the most recent versions are stored, together with the sets of
+changes that must be made to restore them to older versions), and
+to be retrieved upon command. SCCS is a sophisticated system and a
+description of its use is beyond the scope of this book. Interested
+readers are referred to the UNIX manuals for details. A good
+introduction to SCCS (as well as many other UNIX utilities), is the
+book {\em UNIX Utilities -- A Programmers Reference}, by R S Tare
+(McGraw-Hill 1987).
+
+\section{{\cmd sdb} -- A Symbolic Debugger}
+\index{debugging!sdb@{\cmd sdb}}
+\index{sdb@{\cmd sdb}}
+     {\cmd sdb} is  a powerful  symbolic debugger for C programs. It
+makes use of the program source  files, thus  it is possible to see
+at any time which C statement is being processed. In order to  use
+{\cmd sdb} to debug a program, the program must have been compiled
+with the {\cmd -g} option of {\cmd cc.}
+
+     To invoke {\cmd sdb}, we use:
+\begin{display}\cmd
+sdb $[${\ms object\_file\/} $[${\ms core\_file\/} $[${\ms directory\_list\/}$]]]$
+\end{display}
+\noindent
+where
+\begin{itemize}
+\item[]  {\ms object\_file\/} is the name of the compiled program (the
+default is {\fn a.out}).
+\item[]  {\ms core\_file\/}  is an optional core dump of the program.
+This is a record of the state  of the  program at  some particular
+point during execution. We can generate a  core dump  at any  time
+while executing a program by typing \CTRL \verb+\+ (this also  causes
+the program's execution to be terminated). Alternatively, if a program
+crashed  during execution,  a core  dump is automatically generated
+by UNIX. The default name for core files is {\fn core}.
+\item[]   {\ms directory\_list\/} tells  {\cmd sdb} where  to look  for the
+program  source files. If  more than  one directory is given, they
+must be separated by colons (:).
+\end{itemize}
+ {\cmd sdb} is terminated with the command {\cd q}.
+
+{\cmd sdb } maintains a current file name and current
+line count. If  {\ms core\_file} is  present, the current file is set to
+the core file, and the current line is set to the line  where the
+program stopped.  Thus, if  a program crashed, one can immediately
+find out where it did so.
+
+     Variable names in {\cmd sdb} are the same as in the source
+programs, except that variables  local   to  a   function   must  be
+written   using   the   form {\ms function\/}:{\ms variable\/}. If no
+function  name is given, the current function is used. Array and
+structure elements can be accessed as usual, using {\cd []}, . and
+{\cd ->}.  One can also specify variables by their addresses.
+
+     Lines in  a  source  program can  be referred  to as  {\ms
+file\/}:{\ms number\/} or {\ms function\/}.{\ms number\/}. In  either
+case, {\ms number\/} is relative to the beginning of  {\ms
+file\/},  or the  file containing  {\ms function\/}. If no {\ms
+number\/} is given, the first line of the {\ms file\/} or {\ms
+function\/} is used.
+
+     {\cmd sdb} provides  a large  set of  commands, of which we shall
+examine only a few. Firstly, commands to examine program source
+files:
+\begin{hanglist}
+\hangitem{\cd e {\ms function\/} \\
+           e {\ms file\/}  }
+ Sets the  current file  to be  the specified {\ms file\/}, or the
+file containing  {\ms function\/},  and sets the current line
+to be the first line in the {\ms function\/} or {\ms file\/}.
+
+\hangitem{\cd /{\ms pattern\/} }
+ Search from  the current line  for a  line containing a match of
+{\ms pattern}.
+
+\item[\cd ?{\ms pattern\/}]
+ Search backwards for {\ms pattern}.
+
+\item[\cd p]
+ Print the current line.
+
+\item[\cd z]
+ Advance and print the next ten lines.
+
+\item[\cd w]
+ Print the ten lines around the current line.
+
+\item[\ms number\/]
+ Set the current line to {\ms number\/}.
+
+\item[\cd {\ms count\/}+]
+ Advance by {\ms count\/} lines, and print the new current line.
+
+\item[\cd {\ms count\/}-]
+ Retreat by {\ms count\/} lines, and print the new current line.
+
+\end{hanglist}
+     The following commands allow us to examine data from the program:
+\begin{hanglist}
+\item[\cd t] Print a function stack trace.
+
+\item[\cd T] Print the top line of the stack trace.
+
+\hangitem{\cd {\ms variable\/}/lf}
+ Print the  value of {\ms variable\/} according to the length {\cd l}
+and  format {\cd f}.  The length  and format may be omitted, in which
+case {\cmd sdb} selects a length and format according to the variable's
+declaration.  The length specifiers are
+\begin{itemize}
+\item[{\cd b}] one byte
+\item[{\cd h}] two bytes
+\item[{\cd l}] four bytes
+\item[{\ms number}]  length of a string
+\end{itemize}
+The  formats are
+\begin{itemize}
+\item[{\cd c}] character
+\item[{\cd d}]  decimal
+\item[{\cd u}] unsigned decimal
+\item[{\cd o}] octal
+\item[{\cd x}] hexadecimal
+\item[{\cd f}] 32-bit floating point
+\item[{\cd g}] 64-bit  floating point
+\item[{\cd s}] string -- print characters  from address  contained in variable,
+\item[{\cd a}] string -- print characters  from variable's  address
+\item[{\cd p}] pointer to function
+\end{itemize}
+
+\hangitem{\cd {\ms variable\/}=lf\\
+              {\ms linenumber\/}=lf\\
+              {\ms number\/}=lf  } 
+ Print the  address of  {\ms variable\/}, {\ms line
+ number\/} or {\ms number\/} in the specified format.  {\cd l} and
+ {\cd f} are as before.
+
+\hangitem{\cd {\ms variable\/}!{\ms value\/} }
+ Set {\ms variable\/} equal to {\ms value\/}
+
+\end{hanglist}
+A  program can be executed under  {\cmd sdb}'s control.  {\cmd
+sdb} allows one to set breakpoints at  any point  in  the  program. 
+When  an active  breakpoint  is encountered, {\cmd sdb } reports
+that  it  has reached  the  breakpoint,  and  stops executing the
+program. One can then use {\cmd sdb} freely, and continue executing
+the program if  one wishes.  The following commands allow   control
+of the execution of a program:
+\begin{hanglist}
+\hangitem{\cd {\ms count\/} R \\
+   {\ms count\/} r {\ms args\/}}      
+	Run the program (with the arguments {\ms args\/} if {\cd r}).
+   After using  {\cd r} once, one can omit  {\ms args\/}, in which case
+   the previous  {\ms args\/}  will  be  used  again.  The  optional
+   {\ms count\/} specifies  the number  of breakpoints to be skipped
+   over before making all breakpoints active.
+
+\hangitem{\cd {\ms line\/} C {\ms count\/}\\
+   {\ms line\/} c {\ms count\/} }
+	Continue  execution   after   a   breakpoint   or
+   interrupt. {\ms count\/}  is as before. {\cd c} continues, ignoring the
+   signal that caused the program to stop. If {\ms line\/} is given,
+   a temporary  breakpoint is  set at  that line,  and deleted
+   when the command finishes.
+
+\hangitem{\cd {\ms count\/} s \\
+   {\ms count\/} S }
+	Run the  program for  {\ms count\/} lines  (the default is one).  
+	If {\cd S}, single step through called functions as well.
+
+\hangitem{\cd {\ms function\/}({\ms args\/}) \\
+   {\ms function\/}({\ms args\/})/f }
+	Call   {\ms function\/}  with  {\ms args\/}.  If  the
+   second form  is used,  the returned  value is  printed with
+   format {\cd f}. The default format is {\cd d}.
+
+\hangitem{\cd  {\ms line\/} b {\ms requests\/} }
+   Set a  breakpoint at  {\ms line\/} (the  default is the
+   current line).  If {\ms requests\/}  are  given,  then  when  the
+   breakpoint is  encountered the  {\ms requests\/} are executed and
+   the program  continues; otherwise  control returns  to  {\cmd sdb}
+   when the  breakpoint is  encountered. Multiple requests can
+   be separated by {\cd ;}.
+
+\hangitem{\cd {\ms line\/} d}
+   Delete the breakpoint at {\ms line\/}. If no {\ms line\/} is given,
+   {\cmd sdb} prints each  breakpoint and  asks confirmation before
+   deleting it.
+
+\item[\cd B]   Print the current breakpoints.
+
+\item[\cd D]   Delete all breakpoints.
+
+\item[\cd I] Print the last line executed.
+
+\hangitem{\cd {\ms line\/} a } 
+ Announce. If  {\ms line\/} is  of the form  {\ms function\/}:, this 
+is the same as  {\cd {\ms function\/}:\ b T}  else  if  {\ms line\/}  is 
+of  form {\ms function\/}:{\ms line\/}, it  is the  same as {\cd {\ms
+line\/}b I} The effect is to  print the  line or  function name  every
+time  it is executed.
+\end{hanglist}
+ As in other UNIX utilitites, commands can be sent to the UNIX shell
+by preceding them with {\cd !}.
+
+\section{{\cmd dbx} -- A Symbolic Debugger}
+\index{debugging!dbx@{\cmd dbx}}
+\index{dbx@{\cmd dbx}}
+{\cmd dbx} is a symbolic debugger that is used in BSD versions of UNIX, as
+well as in IBM's AIX system. It is very user-friendly and easy to
+use.
+
+Like {\cmd sdb}, {\cmd dbx} requires you to compile your C program with
+the {\bf -g} option of {\bf cc}. It will also make use of a
+core dump file if there is one (see the section on {\cmd sdb} for a
+description of what a core dump file is). Recall that you can force a
+core dump at any stage with \CTRL \verb+\+.
+
+{\cmd dbx} takes two optional arguments, the first being the name of
+the file to be debugged, and the second is the name of the core dump
+file. The defaults are {\fn a.out} and {\fn core} respectively. After
+starting {\cmd dbx}, it will print a message, and then prompt you
+with the prompt {\cd (dbx)}. You can type {\cd help} to get a screen
+full of help, summarising the possible commands you can use. Some
+(but by no means all) of these commands are described in the
+following paragraphs.
+
+When {\cmd dbx} starts, it looks for a file called {\fn .dbxinit}, in
+the current directory, and if not found, in the user's home
+directory. If it finds this file, it runs the commands in it. This
+file can be used to customise {\cmd dbx} to an extent, as well as to
+repeat a set of commands. Furthermore, the option {\cmd -c}{\ms
+file\/} can be used to specify a file containing commands to be
+executed before reading from the keyboard.
+
+The following operators are all valid in {\cmd dbx} expressions:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+Algebraic: & \cd +  -  *  / {\rm (floating)}  div {\rm (integral)}  
+		mod  exp {\rm (exponentiation)} \\
+Bitwise:   & \cd |  bitand  xor  \verb+~+  <<  >> \\
+Logical:   & \cd or  and  not \\
+Comparison:& \cd >  <  <=  >=  !=  == \\
+Other:	  & \cd sizeof	
+\end{tabular}
+\end{display}
+\noindent
+ The command {\cd where} will print a {\kc stack trace}, showing you
+where in your program you are. The stack trace lists, in reverse
+order, the different functions that are currently active, including
+the parameters that were passed to them. The last function listed is
+always the first one called, namely {\cd main}. This command is
+particularly useful after a UNIX-instigated core dump, as it tells
+you where your program crashed.
+
+The command {\cd call {\ms func\/}({\ms params\/})} executes the
+function {\ms func\/} with the specified arguments. Alternatively,
+{\cd print {\ms func\/}({\ms params\/})} will do similarly, and
+also print the return value.
+
+{\cd next} {\ms $[$num\/$]$} will execute the next line of the program (or
+{\ms num\/} lines, if {\ms num\/} is specified. A similar command is {\cd
+step}. The difference is that if the line(s) to be executed contain a
+function call, {\cd step} will stop at that call, whereas {\cd next}
+will execute it.
+
+The {\cd run} command will execute the program. It can be followed by
+command line arguments for the program, as well as redirection
+commands for {\fn stdin} and {\fn stdout}. In other words, a command
+line can be specified as usual, except that the name of the program
+is omitted.  For example:
+ \begin{code}
+run -x <data >list
+\end{code}
+\noindent
+ Values can be assigned to variables with the {\cd assign {\ms var\/} =
+{\ms expr\/}} command, and the values of expressions can be printed with the
+{\cd print }{\ms expr\/$[$,expr...$]$} command.
+
+The {\cd trace} command lets you track variables as their values
+change. You must specify which variable to trace. When you then run
+the program, each time a traced variable is altered its value is
+printed, together with the place in the program where the value was
+changed. The {\cd trace} command is extremely flexible and powerful.
+A similar command is {\cd stop}. For full details, see the UNIX
+manuals.
+
+To examine the program, the {\cd list} command is used. You can
+specify the name of a function, or a range of lines to be listed,
+for example, {\cd list 10,20}.
+
+Finally, to exit {\cmd dbx}, we use the {\cd quit} command.
+
+This is a very cursory description of {\cmd dbx}'s capabilities, but
+it includes sufficient information to get started. Once you have the
+feel for these commands, look at the {\cmd dbx} entry in the UNIX
+manuals for full details of the entire {\cmd dbx} command set.
+
+\section{{\cmd strip} -- Strip Symbolic Information}
+\index{strip@{\cmd strip}}
+\index{debugging!stripping symbolic information}
+When a program is compiled with the {\cmd -g} option as required by
+{\cmd sdb} and {\cmd dbx}, the compiler adds symbolic information to
+the executable file that aids the symbolic debugger.  This
+information takes up extra space which is not required once the
+program is debugged.  UNIX  provides a  utility, {\cmd strip}, which
+removes the symbolic information from the file without having to
+recompile it.  {\cmd strip} allows two options to control what
+information is stripped:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+{\cmd -l} & Strip line number information only.\\
+{\cmd -x} & Don't strip static and external symbol information.
+\end{tabular}
+\end{display}
+\noindent
+     The default action of {\cmd strip} is to remove all symbolic
+information.
+
+\section{{\cmd ctrace} -- The C Trace Utility}
+\index{debugging!tracing program execution}
+\index{trace@{\cmd ctrace}}
+{\cmd ctrace} is  a utility that inserts statements into a  C program
+to print each statement  before execution,  as well  as to print the 
+values  of  any variables referenced or modified. {\cmd ctrace} is a
+filter; however, the {\cmd cc} compiler is not,  therefore you  must
+send the output  of {\cmd ctrace } to a  temporary file before you
+can compile it with {\cmd cc}.  In other words:
+\begin{display}\cmd
+ ctrace {\cd <}myprog.c {\cd |} cc
+\end{display}
+\noindent
+     is not allowed. Instead you must use something like
+\begin{display}\cmd
+          ctrace  {\cd <}myprog.c {\cd >}mytmp.c\\
+          cc mytmp.c\\
+          rm mytmp.c
+\end{display}
+\noindent
+     {\cmd ctrace} allows a file argument to be specified, as in:
+\begin{display}\cmd
+          ctrace myprog.c {\cd >}mytmp.c
+\end{display}
+\noindent
+     {\cmd ctrace} detects  loops and  stops the  trace until  the
+loop  is exited. A warning message  is printed  every 1000  times
+through the loop. The output of {\cmd ctrace} always  goes to the standard
+output. A typical use would be to pipe the output of  a crashing 
+program to the UNIX {\cmd tail} command, and thus see the last few
+statements executed, as well as their effect.
+
+{\cmd ctrace} has the following options:
+\begin{hanglist}
+\hangitem{\cmd -f  {\ms function\_list\/}  \\
+			-v {\ms function list\/} }
+       Select only ({\cmd -f})  or all except ({\cmd -v}) the  
+functions named in {\ms function\_list\/} for  tracing. 
+
+\hangitem{\cmd -o -x -u -e}
+ Change the numeric formats from their  defaults to octal ({\cmd
+-o}), hexadecimal {\cmd -x}) unsigned ({\cmd -u}), or floating point
+({\cmd -e}).
+
+\hangitem{\cmd -l  {\ms number\/}}
+  Specify  the  number  of  consecutive statements that are checked 
+to detect  loops (default 20). In other words, loops are assumed to
+be no more than {\ms number\/} statements long. If you want every
+statement traced (that is, no loop checking), use the value 0.
+
+\hangitem{\cmd -t  {\ms number\/}}
+  Specify the maximum number of variables that will be traced per
+statement. The default is 10, and the maximum is 20.
+
+\item[\cmd -P ]
+ Run the preprocessor  on the  file before  adding  trace statements.
+This  is useful  if the  file {\cd \#include}s some other file which must
+also be  traced, or  if you  have defined macros which are expressions
+and you want them traced as well.
+
+\hangitem{\cmd -p '{\ms string\/}'}
+   Change the default ({\cd 'printf('}) trace statement. This option
+makes it possible to print the trace to other files.  For example, to  print 
+all  trace statements to stderr,  one could  use the option  {\cd 
+-p 'fprintf(stderr,'}.
+\end{hanglist}
+     We can control the trace from within our program. There are two
+functions provided by  {\cmd ctrace} to turn tracing off and on.
+These are {\cd ctroff()} and {\cd ctron()} respectively. {\cmd
+ctrace} also defines  the symbol {\cd CTRACE}, thus  we  can  have 
+conditionally compiled statements  controlling the  trace in an
+arbitrarily complex way. For example:
+\begin{code}
+   \#ifdef CTRACE    \\
+\>   ctroff();		  \\
+   \#endif			  \\
+	\vdots			  \\
+   \#ifdef CTRACE	  \\
+\>   if( feof(outfile) \&\& (n<100) ) ctron(); \\
+   \#endif
+\end{code}
+\noindent
+     We can  also use  these functions  from within {\cmd sdb} if we 
+compile the output of {\cmd ctrace} with the {\cmd -g} option of
+{\cmd cc}. For example:
+\begin{display}\cd
+          main:1b ctroff()\\
+          main:10b ctron()\\
+          r
+\end{display}
+\noindent
+  in {\cmd sdb} will trace all but the first 10 lines of {\cd main}.
+
+     Note that {\cmd ctrace} can't handle printing components of
+aggregate data types such as structures, unions and arrays.
+
+\section{{\cmd cxref} -- The C Program Cross-Reference Generator}
+\index{cxref@{\cmd cxref}}
+\index{identifiers!cross-referencing with {\cmd cxref}}
+     This utility  analyses a  collection of  files and  attempts to 
+build  a cross-reference for  them. This  cross-reference can contain
+all  identifiers (including preprocessor  names),  either separately 
+for  each  file,  or  in combination. The identifiers are listed
+together with all their occurrences. Defining references are marked
+with an asterisk {\cd *}.
+
+     The syntax of the command is:
+\begin{display}\cmd
+          cxref  $[${\ms options\/}$]$  {\ms files}
+\end{display}
+\noindent
+     {\cmd cxref} allows the {\cmd -D}, {\cmd -I}, and {\cmd -U}
+options of {\cmd cc}, as well as:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+{\cmd -c}  &      Produce a combined cross-reference for all files.\\
+{\cmd -o} {\ms file\/} & Send output to the named file. \\
+{\cmd -s}   &     Don't print the input file names.\\
+{\cmd -t}   &    Format output for 80-column device.
+\end{tabular}
+\end{display}
+
+
+\section{{\cmd cb} -- The C Program Beautifier}
+\index{style!cb@{\cmd cb}}
+\index{cb@{\cmd cb}}
+     {\cmd cb} is  a filter   which takes a C program (either from its
+argument list, or stdin),  and writes  it on stdout with appropriate
+spacing and indentation.  Note that  punctuation which  is hidden  in
+preprocessor  statements may cause indentation errors. The available
+options are:
+\begin{display}
+\begin{tabular}{@{}ll@{}}
+  {\cmd   -s} & Output code in Kernighan and Ritchie style. \\
+  {\cmd   -j} & Rejoin split lines if necessary.\\
+  {\cmd   -l}{\ms length\/} &   Split lines longer than {\ms length}.
+\end{tabular}
+\end{display}
+
+
+
+
+\section{Building Your Own Libraries}
+\index{libraries!creating your own}
+     The advantage of writing small, generalised functions is that
+they may be easily reused.  If you  write a  program, and  this
+program  has, say,  a  few functions which  are of  general use  and
+not specific to the program, you can separate these functions from
+the program and put them in your own library for future use.
+
+     A library (or {\kc archive}) is a single file which contains
+other files. There are no restrictions on the contents of an archive;
+within a particular archive we may keep documents, program listings,
+compiled programs, and so on. Archive file names have the convention
+that they begin with {\fn lib} and end with {\fn .a}.
+
+     When you  compile a  program, you  can specify  the name of an
+archive or archives for  {\cmd ld} to  search. {\cmd ld}  will extract
+any files from the archive that resolve external references in the
+program being compiled, and add them to the program. Note  that
+library  functions stored in an archive must  have been compiled, but
+not linked.  In  other words,  they must have been compiled with the
+{\cmd -c} option of {\cmd cc}.
+
+     The UNIX {\cmd ar} utility is used for archive maintenance. To
+create an archive (say {\cmd libme.a}) containing files {\cmd fun1.o},
+{\cmd fun2.o}, and {\cmd fun3.o}, we use:
+\begin{display}\cmd
+ar  rv  libme.a  fun1.o  fun2.o  fun3.o
+\end{display}
+\noindent
+     To extract  {\cmd fun1.o} and {\cmd fun3.o} and place them in the
+current directory, we use:
+\begin{display}\cmd
+ar  xv  libme.a  fun1.o  fun3.o
+\end{display}
+\noindent
+     If we  use the {\cmd ar rv} command shown above after having
+already created the archive, we  will simply add the  files {\cmd
+fun1.o},  {\cmd fun2.o} and {\cmd fun3.o} to the archive.  If  there
+are  already files with that name  in the archive, they will be
+replaced.
+
+     To examine the files in the archive,  use:
+\begin{display}\cmd
+ar  tv  libme.a
+\end{display}
+\noindent
+     The  only  problem  with  these  archives  is  that  they  are
+searched sequentially by  {\cmd ld}, so  functions which  call other
+functions in the archive must precede  those functions in the
+archive.  This allows {\cmd ld} to detect an unresolved reference in
+a single pass, because when it  reaches the  called  function  it
+can  resolve  the reference. If  the called  function preceded the
+caller, and no other function called this  function, then  {\cmd ld}
+will  skip the function since it does not resolve any references at
+that point.  When {\cmd ld} eventually reaches the  caller, an
+unresolved reference  will occur that could not be resolved in the
+same pass. Fortunately there are solutions to this problem.
+
+     The first  is for  those UNIX  systems that have the command
+{\cmd ranlib}. This command builds  a table  of references of a
+library, so that all the necessary functions can be quickly
+extracted. This is the ideal option, but not all UNIX systems have
+this command.
+
+     An alternative  is to  use the {\cmd lorder} and {\cmd tsort}
+commands. These produce a sorted list of function dependencies, which
+eliminates any forward references, except in  the case  when two
+functions refer  to each  other.  To  find  the ordering for all the
+{\cmd .o} files in the current directory, we use:
+\begin{display}\cmd
+lorder {\cd *}.o {\cd |} tsort
+\end{display}
+\noindent
+     UNIX allows  us to  replace commands  by their  output by  using
+backward quotes {\cd `\,`}.  Thus we can create a sorted archive
+(called, say, {\cmd libme}) of all the
+{\cmd .o} files in the current directory, by using
+\begin{display}\cmd
+ar -cr libme  `lorder {\cd *}.o {\cd |} tsort`
+\end{display}
+\noindent
+     The last  alternative, which  may   be necessary  if we
+don't  have {\cmd ranlib}, is  for {\cmd ld} to search the library
+twice. This can be done by using the {\cmd -Ime} option to  {\cmd ld}
+twice (as well as {\cmd -L}{\ms dir\/} to indicate which
+directory the library is stored in).
+
+     Note that  UNIX System  V supports random libraries automatically
+through {\cmd ar}.
+
+\section{Obtaining Information On Compiled Files}
+
+There are two commands that provide information on programs that have
+been compiled:
+\begin{description}
+ \item[{\cmd size}]  prints  the sizes of the sections (.text, .bss,
+.data, or .code) of files. The syntax is as follows:
+ \begin{display}\cmd
+size $[${\ms options\/$]$ files}
+\end{display}
+\noindent
+\index{size@{\cmd size}}The options are as follows:
+\begin{display}
+\begin{tabular}{@{}lp{.7\textwidth}@{}}
+  {\cmd -o} & Select  octal   output. \\
+  {\cmd -x} & Select  hexadecimal output.\\
+  {\cmd -V} & Print the version of {\cmd size} being used.
+\end{tabular}
+\end{display}
+\noindent
+     The sizes  are printed  in decimal by default.
+
+\item[{\cmd nm}]\index{nm@{\cmd nm}}  prints selected  symbol table
+information from compiled files.  The information include symbol
+names,  addresses, storage  classes and  sections of symbols.  If
+the files  were compiled  with the  {\cmd -g} option,  the types,
+sizes and lines at which the symbols were declared are also printed.
+The format of the command is
+ \begin{display}\cmd
+nm $[${\ms options\/$]$ files}
+\end{display}
+\noindent
+where the options are:
+\begin{display}
+\begin{tabular}{@{}lp{.7\textwidth}@{}}
+  {\cmd -o} & Select  octal   output \\
+  {\cmd -x} & Select    hexadecimal output\\
+  {\cmd -h} & Don't print a heading \\
+  {\cmd -v} & Sort the symbols by value\\
+  {\cmd -n} & Sort the symbols by  name\\
+  {\cmd -e} & Select only  the static  and extern  symbols\\
+  {\cmd -u} & Select only  the undefined symbols\\
+  {\cmd -f} & Print all symbols in the symbol table\\
+  {\cmd -V} & Print the version of {\cmd nm} being used\\
+  {\cmd -T} & Truncate symbol names that are too long to
+  				    be printed in the name column.
+\end{tabular}
+\end{display}
+\end{description}
+     One \index{time@{\cmd time}}other useful command is the {\cmd time} command.
+\begin{display}\cmd
+time {\ms command\/}
+\end{display}
+\noindent
+     where {\ms command\/} is an  arbitrary command to the UNIX shell
+(and thus could be the  execution of  a program). This will print how
+long the command took to execute, as  well as  how much  of this time
+was spent in the user part of the program and how much was spent in
+the system (for example, during I/O).
+

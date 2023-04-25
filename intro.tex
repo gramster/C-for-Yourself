@@ -1,0 +1,139 @@
+\chapter{Introduction}
+
+\section{A Short History of C and UNIX}
+\index{history of C}
+
+   In the 1960's, as the use of computers changed from batch
+processing systems to the new concept of time-sharing, operating
+system design was a major computing issue. In England, the
+Universities of London and Cambridge embarked on the Combined
+Programming Language (CPL) project, an attempt to provide a single
+language for all applications, including what were previously thought
+to be assembly language applications.
+
+   CPL was not entirely successful, and never came into general use,
+but it did inspire the language BCPL (Basic CPL). BCPL is a system's
+programming language with the main distinguishing feature that it is
+typeless - the only data objects allowed are machine words; it is up
+to the programmer to implement types such as characters, strings,
+real numbers, and so on.
+
+   In America, much work was being done on the Multics (MULTiplexed
+Information and Computing Service) project, a joint Massachusetts
+Institute of Technology, Bell Laboratories and General Electric
+Corporation time-sharing project started in 1965 as part of MIT's
+``Project MAC.'' After three years, no usable system had yet been
+produced, and Bell Laboratories withdrew from the project. Ken
+Thompson and Dennis Ritchie were two of the last Bell Labs employees
+still working on Multics, and were unhappy with the idea of losing
+the limited time-sharing capability Multics had thus far produced.
+They began designing their own file system on paper. Thompson found
+an unused PDP-7 to play with, and their file system was soon
+bootstrapped onto it. They were encouraged in their task by the fact
+that CPU time on the mainframe for Thompson's elaborate ``Space
+Travel'' game cost about \$75 a game, while the PDP-7 was theirs to
+play with and had superior graphics!
+
+   Some essential utilities for file handling, including printing and
+editing, were added, as well as a way to run system processes. In 1970,
+Brian Kernighan named this rudimentary system ``UNIX'' --  a pun on
+Multics.
+
+   The UNIX system was moved onto a PDP-11 for developing a text
+processing system for Bell, and the First Edition documentation written
+by Ritchie and Thompson in late 1971, the Second Edition appearing in
+June 1972.
+
+   B, a direct descendant of BCPL, was used by Thompson for the Second
+Edition assembler. He extended B into a language called NB, in the hope
+of using it to rewrite UNIX. However, this proved unsuccessful. Ritchie,
+attempting to improve the performance of NB, came up with a similar
+language, which he called C. In 1973 structures were added to C, adding
+considerable power, and UNIX was rewritten in C.
+
+   Due to a government agreement, Bell Labs could not market UNIX, but
+provided it free to universities, which resulted in a large growth of
+software, particularly at the University of California at Berkeley.
+
+   In 1978 Kernighan and Ritchie published {\em The C Programming
+Language\/}
+(Prentice-Hall), still considered the definitive reference on C. A
+summary from this book is reprinted as ``The C Programming Language -
+Reference Manual'' by Dennis Ritchie (see ``UNIX Programmer's Manual
+volume 2'', Bell Laboratories).
+
+   Although there is an American National Standards Institute (ANSI)
+proposed standard\index{ANSI C}, C dialects abound. However, most implementations
+conform closely to the 1978 version (known as Kernighan \& Ritchie, or
+K\&R C)\index{K\&R C} and, more increasingly, the ANSI standard recommendations,
+although these are less commonly found on UNIX systems. Steve
+Johnson's Portable C Compiler (PCC), the basis of many UNIX C
+compilers, is also often used as a standard reference.
+
+   Hand-in-hand with the development of UNIX and C was the development
+of their underlying philosophy, dubbed the ``Software Tools'' 
+\index{software tool}philosophy.
+This philosophy will be discussed in more detail later.
+
+\section{The UNIX {\cmd cc} Compiler}
+\index{cc@{\cmd cc}}
+
+     The {\cmd cc} compiler is the main compiler of the UNIX system,
+and comprises  several parts.  These parts  are often  transparent to
+the user,  since  the  {\cmd cc} command calls them as necessary.
+Nonetheless, it is useful to know a little bit about the compiler and
+its constituent phases.
+
+\index{cc@{\cmd cc}!components of}
+    First, there  is the  {\kc preprocessor\/}\index{cpp@{\cmd cpp}}, {\cmd cpp}. This is a 
+simple macroprocessor, which has  a small  set of commands allowing
+macros to be defined, sections of program to  be conditionally 
+compiled, text  from other files to be included, and so  on. {\cmd
+cpp} also strips comments \index{comments}from files. The output from {\cmd cpp} is
+passed as a text stream to the first pass of the compiler proper. 
+The preprocessor is described in more detail in the next chapter.
+
+     The compiler  conceptually operates  in  two  passes,  although 
+on  most systems these  actually occur  together. The  first pass
+takes the output from {\cmd cpp} and  converts it  into an 
+intermediate file. This file typically contains assembly language 
+statements for  the higher  level  program  code  (such  as loops),
+and  a symbolic  representation of  the lower level expressions in
+the program. The  second pass copies the assembly language statements
+to a further intermediate file, and generates assembly language for
+the expressions. There is also an optional optimisation phase, {\cmd
+c2}, after the second pass.
+
+     The compiler  output is   given  to the  {\kc assembler\/},
+{\cmd as}\index{as@{\cmd as}}.  This is  the resident UNIX  assembler and  varies from 
+system to  system.  The  assembler converts the  assembly language 
+file into machine code, and saves the results in a file using the
+ UNIX common  object file  format (or  COFF)\index{COFF}. This  format
+includes various  headers, symbol  table and relocation information,
+and three sections -  one for  the machine  code (called {\bf
+.text}\index{text@{\bf .text}}), one for the initialised data in the program (called {\bf
+.data}\index{data@{\bf .data}}), and one for  uninitialised data (called 
+{\bf .bss}\index{bss@{\bf .bss}}).
+
+     The assembler  output file  is then passed to the {\kc linker\/}, 
+{\cmd ld}\index{ld@{\cmd ld}}. This is the standard UNIX linker. It adds any necessary
+library functions \index{libraries}to the file, and resolves references across files
+if the program is split over several files.
+
+The final executable file is always put in a file called 
+{\fn a.out}\index{a.out@{\fn a.out}}, 
+unless you specify otherwise. 
+The  name of  the C source  file should always end with  a {\fn .c}
+suffix. Two of the compilation phases  create intermediate files with
+the same name as the source file, but with different suffixes, namely:
+ \begin{display}
+\begin{tabular}{@{}ll@{}}
+          {\fn .s} &  the output from the second pass of the compiler (assembly language)\\
+          {\fn .o} &  the output from the assembler (machine code)
+\end{tabular}
+\end{display}
+\noindent
+ These intermediate files are usually destroyed, unless you specify
+otherwise.  For details on the compiler options available, consult
+Appendix~\ref{cc}.
+

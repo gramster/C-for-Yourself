@@ -1,0 +1,663 @@
+
+\section{Statements}
+
+     Statements are  the most  complex constructs  in C  other than
+functions (although  a  function  body  is  simply  a  large
+compound  statement).  All statements in  C, except  compound
+statements,  must end with a semicolon. Any expression may be treated
+as a statement; it is simply evaluated and its value discarded.
+
+     A  {\kc compound  statement\/}  \index{statements!compound}or 
+{\kc block\/}  consists  of
+(optional)  declarations followed by  a (possibly empty) sequence of
+statements, all enclosed in braces {\cd \{\}}. A compound statement may
+appear anywhere a statement may. Any declarations that are  not {\cd
+extern}al  are local  to the  block, and  cannot be accessed from
+outside the block.
+
+
+\subsection{The {\cd if} Statement}
+\index{statements!if@{\cd if}}
+\index{statements!else@{\cd else}}
+     An {\cd if} statement has the form:
+\begin{code}
+if( {\ms expression\/} ) \\
+ \> {\ms statement\/} 	 \\
+else 							 \\
+ \> {\ms statement\/}
+\end{code}
+\noindent
+     The {\cd else}  {\ms statement\/} part may be omitted.  The
+expression is evaluated; if it is  true, the  first statement  is
+executed.  If it is false, the statement following {\cd else}  is
+executed.  If there  is no  {\cd else} part and the expression is
+false, the  {\cd if} statement  is skipped  and the  program
+continues with the next statement.
+
+   {\cd if} statements can be  cascaded as in:
+\begin{code}
+if( {\ms expression\/} )		\\
+ \> {\ms statement\/}			\\
+else if( {\ms expression\/} ) \\
+ \> {\ms statement\/}			\\
+else if( \ldots\  ) \\
+ \vdots							\\
+else {\ms statement\/}
+\end{code}
+\noindent
+     An  {\cd else}  always  refers  to  the  closest  possible  {\cd
+if}.  If  any  other interpretation is needed, braces can be used.
+For example
+\begin{code}
+if({\ms e1\/}) if({\ms e2\/}) {\ms s1\/} else {\ms s2\/}
+\end{code}
+\noindent
+     where {\ms e1\/} and {\ms e2\/} are expressions, and {\ms s1\/} and
+{\ms s2\/} are statements, groups as
+\begin{code}
+if({\ms e1\/}) \{ if({\ms e2\/}) {\ms s1\/} else {\ms s2\/} \}
+\end{code}
+\noindent
+     If we wanted it to group as
+\begin{code}
+if({\ms e1\/}) \{ if({\ms e2\/}) {\ms s1\/} \} else {\ms s2\/}
+\end{code}
+\noindent
+     we would have to use the braces as shown.
+
+
+
+\subsection{The {\cd while} Statement}
+\label{while_st}
+\index{statements!while@{\cd while}}
+     The {\cd while} statement is one of C's looping statements. It has
+the form:
+\begin{code}
+while( {\ms expression\/} ) \\
+\> {\ms statement\/}
+\end{code}
+\noindent
+     The {\ms expression\/}  is evaluated; if it  is false,  the
+rest of the {\cd while} statement is skipped and  the program
+continues with the next statement. If {\ms expression\/} is true, 
+{\ms statement\/} is  executed, and  the program continues from the
+start of the while statement. Thus, as long as {\ms expression\/} is
+true,  {\ms statement\/} is repeatedly executed. Note that  if {\ms
+expression\/} is false right  at  the start, {\ms statement\/} is not
+executed at all.
+
+
+\subsection{The {\cd do} Statement}
+
+\index{statements!do@{\cd do}}
+     This is similar to the {\cd while} statement. It has the form:
+\begin{code}
+do  \\
+ \> {\ms statement\/} \\
+while( {\ms expression\/} );
+\end{code}
+\noindent
+     The main  difference between  a {\cd do}  and a {\cd while}
+statement is that in a {\cd do} statement, {\ms statement\/} is 
+executed  before the  {\ms expression\/}  is evaluated. Thus 
+{\ms statement\/} is always executed at least once, even if
+{\ms expression\/} is false to begin with.
+
+
+\subsection{The {\cd for} Statement}
+\index{statements!for@{\cd for}}
+
+     This is C's most powerful looping command. It has the form:
+\begin{code}
+for( {\ms expression1\/}; {\ms expression2\/}; {\ms expression3\/} ) \\
+ \> {\ms statement\/}
+\end{code}
+\noindent
+     Each of  the three  expressions is  optional, but  the
+semicolons must be present. The effect of the {\cd for} statement is
+as follows:  Firstly, {\ms expression1\/} is evaluated. This  is used
+to set up any variables needed by the loop. Then the following
+process is repeatedly performed:  {\ms expression2\/} is  evaluated;
+if  its value is  zero, the {\cd for} statement terminates and  the
+program  continues with the next statement. Otherwise,  {\ms
+statement\/} is executed, after which {\ms expression3\/} evaluated.
+
+     Thus, {\ms expression2\/}  is used to test for loop
+termination, while  {\ms expression3\/} is  usually used  to modify 
+some  variable(s)  used  in controlling the loop.
+
+The {\cd for} loop is equivalent to the following {\cd while} loop:
+\begin{code}
+{\ms expression1\/}; \\
+while( {\ms expression2\/} )\{ \\
+\>  {\ms statement\/}; \\
+\>  {\ms expression3\/}; \\
+\} 
+\end{code}
+\noindent
+     Let's see some examples. Firstly, the BASIC for loop:
+\begin{code}
+FOR I=0 TO 100 STEP 10
+\end{code}
+\noindent
+     could be written in C as:
+\begin{code}
+for( i=0; i<=100; i+=10 )\{ \\
+\> \vdots \\
+\}
+\end{code}
+\noindent
+     The C  {\cd for} is  much more  powerful. For one thing,
+sequential expressions \index{expressions!sequential}may be  used inside the {\cd for(\ldots)}, and 
+furthermore, the expressions are arbitrary. For example, to loop
+through all the powers of two up to 1000, we could use:
+ \begin{code}
+for( i=1; i<=1000; i*=2 )\{ \\
+\> \vdots \\
+\}
+\end{code}
+\noindent
+     Or, to read characters until a space is entered:
+\begin{code}
+for( ; getchar()!=' '; );
+\end{code}
+\noindent
+     In particular,  this last  example shows how any {\cd while}
+loop could be done with a {\cd for}. The {\cd while} 
+loop\index{statements!relationship between {\cd for} and {\cd while}}:
+\begin{code}
+while( {\ms expression\/} ) {\ms statement\/}
+\end{code}
+\noindent
+     is the same as:
+\begin{code}
+for( ; {\ms expression\/}; ) {\ms statement\/}
+\end{code}
+\noindent
+     Conversely, we have already seen how any {\cd for} loop can be
+replaced by a {\cd while}. 
+
+As a  more sophisticated  example, here  is
+a function that tests whether two strings are equal:
+\begin{code}
+int stringeq(s1, s2) \\
+\> char s1[], s2[]; \\
+\{ \+\\
+  char *p1, *p2; \addVspace
+
+  for( p1=s1, p2=s2; *p1 \&\& *p2; ++p1, ++p2)\{ \\
+  \>   if( *p1 != *p2) return FALSE; \\
+  \} \\
+  return *p1==*p2; 
+  \-\\
+\} 
+\end{code}
+\noindent
+    The first expression sets the pointer variables {\cd p1} and {\cd
+p2} to the start of the strings.  The second  expression is  true if 
+and only  if neither  of the current characters  being compared is a
+zero; in other words,  we have not yet reached  the end  of
+either string. The third expression sets the pointers to point to the
+next two characters for comparison.
+
+     The {\cd if}  statement is  executed if the second expression is
+true, that is, we have  not reached  the end of a string. In this
+case, if the two characters being compared are different, the strings
+are not equal and we return false.
+
+     If we  reach the  end of  one of  the strings  and have  not yet 
+found a mismatch, we  exit the  {\cd for} loop.  Now, either we have
+reached the end of both strings and  the strings are equal, or one
+string is longer than the other. We can simply  return the  value of
+the comparison of the last two characters for this --  at least  one
+must  be zero,  so the other is either also zero (and we return true)
+or not (we return false).
+
+Note that in the above example we did not have to use braces ({\cd
+\{\}}) to delimit the body  of the {\cd for} loop, since it consists
+only of one statement.  We nevertheless did so because it is good
+programming practice -- if at a later stage we wish to add a
+statement to the {\cd for} body, we do not have to remember to add
+the braces.
+
+
+
+\subsection{The {\cd switch} Statement}
+\index{statements!switch@{\cd switch}}
+     This is a multiway branch based on the value of an expression,
+similar to BASIC's {\cd on...goto} and Pascal's {\cd case...of}. It
+has the form:
+\begin{code}
+switch( {\ms expression\/} ) \\
+ \> {\ms compound\_statement\/}
+\end{code}
+\noindent
+  In the execution of the {\cd switch} statement, {\ms expression\/} 
+(also known as the switch expression) is evaluated,  and depending 
+on its value, a branch is made to the appropriate {\kc case label\/}
+in {\ms compound\_statement\/}. As the name implies, {\ms
+compound\_statement\/} must be a compound statement. Any statement
+within {\ms compound\_statement\/} may  be labeled  with a  case
+label of the form:  
+ \begin{code} 
+case  {\ms constant\_expression\/}:  
+\end{code} 
+\noindent
+     The type  of {\ms constant\_expression\/} should be the same as
+the type {\ms expression\/}, and no two {\ms constant\_expression\/}s
+in the case labels of the same {\cd switch} statement may have  the
+same value. If the switch expression has the same  value as the
+{\ms constant\_expression\/} of  some case label, then  the compound
+statement  is entered at that point. If no match is
+found, the compound statement is skipped and the program
+continues from the next statement.
+
+     There is  a special  case label,  called {\cd default:},  which
+will  match any value that is not matched by some other case label.
+
+     As an example, consider:
+\begin{code}
+ void triangle( height ) \\
+ \> unsigned short height; \\
+ \{ \+ \\
+    switch( height )\{ \+\\
+         case 4:   printf(" \verb+*******\+n"); \\
+         case 3:   printf(" \verb+ *****\+n"); \\
+         case 2:   printf(" \verb+  ***\+n"); \\
+         default:  printf(" \verb+   *\+n"); 
+			\-\\
+    \} \-\\
+ \} 
+\end{code}
+\noindent
+which will print
+{\cd\begin{tabular}[t]{c}*****\\{***}\\{*}\end{tabular}}
+when called with {\cd triangle(3)} and 
+{\cd\begin{tabular}[t]{c}***\\{*}\end{tabular}}
+when called with {\cd triangle(2)}.  A call to {\cd triangle} with
+any other parameter value than 2, 3, or 4, will cause a branch to
+the {\cd default} label and a single {\cd *} will be printed.
+
+    More than one case label may refer to the same statement in the
+compound statement, for example:
+\begin{code}
+avoid quack\_shrink() \\
+\{ \+\\
+   char c; \addVspace
+
+   printf("Do you like yourself?\verb+\+n"); \\
+   c=getchar(); \\
+   switch( c )\{ \\
+   case 'y': \\ 
+	case 'Y': \\
+	\> printf("You're cured!\verb+\+n"); \\
+   \> break; \\
+   case 'n': \\
+	case 'N': \\
+	\> printf("Don't be so neurotic!\verb+\+n"); \\
+	\} \\
+   printf("Don't forget to leave my fifty bucks. Come again!\verb+\+n"); 
+	\-\\
+\} 
+\end{code}
+\noindent
+(There is an error in the above program, can you spot it?)
+The {\cd break} statement is described below.
+
+
+
+\subsection{{\cd break}, {\cd continue}, {\cd goto}  and {\cd exit()}}
+
+     A {\cd break}  \index{statements!break@{\cd break}}statement causes 
+the execution of the smallest
+containing {\cd while}, {\cd do}, {\cd for}  or {\cd switch}  statement to 
+be terminated.  Execution continues with the next statement after the
+{\cd while}, {\cd do}, {\cd for}, or {\cd switch}.
+
+A {\cd continue}  \index{statements!continue@{\cd continue}}statement 
+causes  the execution  of the
+smallest  containing {\cd while}, {\cd do} or {\cd for} loop's {\ms
+statement\/} to be terminated.  Execution resumes at the start of the
+loop. The use of {\cd continue} is discouraged, as it is often a sign of
+a poorly structured program.
+
+     An example of using of {\cd break} and {\cd continue} is:
+\begin{code}
+ for( i=0; i<5; ++i )\{ \+\\
+      printf("At start of loop; i=\%d\verb+\+n",i); \\
+      if (i==3) break; \\
+      if (i==1) continue; \\
+      printf("At end of loop; i=\%d\verb+\+n",i); \-\\
+ \} \\
+ printf("Out of loop - i=\%d\verb+\+n",i); 
+\end{code}
+\noindent
+     This will result in the printout:
+\begin{code}
+  At start of loop; i=0 \\
+  At end of loop; i=0 \\
+  At start of loop; i=1 \\
+  At start of loop; i=2 \\
+  At end of loop; i=2 \\
+  At start of loop; i=3 \\
+  Out of loop - i=3 
+\end{code}
+\noindent
+     A {\cd goto}  \index{statements!goto@{\cd goto}}statement can 
+be used to transfer control from any
+statement in a function to any other statement in the function. The
+general form is:
+\begin{code}
+goto  {\ms identifier\/};
+\end{code}
+\noindent
+     The destination  statement must  be preceded by  {\ms
+identifier\/} followed by {\cd :}.  The use  of {\cd goto}  is
+strongly discouraged, with one exception -- if some kind of error
+condition occurs in a function or a multiple nested construct, 
+it is acceptable {\cd goto} the
+end of the function or to use {\cd goto} to break out of the nested
+construct. For example:
+\begin{code}
+  funk()							\\
+  \{ 								\+\\
+     if( \ldots\ )\{			\+\\
+       \vdots					\\
+		 while( \ldots\ )\{	\+\\
+		   \vdots				\\
+         if( error ) goto disaster; \\
+		   \vdots 				\-\\
+       \} 						\\
+		 \vdots 					\-\\
+     \} 							\\
+	  \vdots 					\\
+	  return; 					\-\\
+  disaster: 					\\
+  \> printf("Error in funk\verb+\+n"); \\
+  \} 
+\end{code}
+\noindent
+     The appearance  of a label is taken as the declaration of the
+label; thus there is no need to explicitly declare labels.
+
+C provides  a system  call called  
+{\cd exit({\ms n\/})}\index{exit()@{\cd exit()} system call}.  The
+execution of an {\cd exit} call terminates the program, and returns
+the argument value {\ms n\/}. This is usually 0 if the program
+terminated satisfactorily, or some non-zero error code otherwise. The standard
+UNIX error codes are contained in the include file {\fn errno.h}. 
+
+\subsection{The null Statement}
+\index{statements!null}
+     This consists  of just  a semicolon. It is useful in two
+situations: when we have  a loop  which needs  no {\ms statement\/}
+following (as in some of our loop examples above),  and for  allowing
+labels for {\cd goto}s at the end of blocks (for example, if we
+didn't want an error message in {\cd funk} above).
+
+
+
+\section{More About Declarations}
+\index{declarations}
+     The {\kc scope\/}\index{declarations!scope}  of a  declaration is  the region of the program
+over which the declaration has effect. C declarations may have one of
+five scopes:
+\begin{itemize}
+ \item {\kc top-level declarations\/} have a scope extending from the
+declaration to the end of  the program, even if the program is split
+up into several files (but see below);
+
+\item {\kc arguments\/} have their function bodies as their scope;
+
+\item {\kc block declarations\/} have a scope extending to the end of
+the block;
+
+\item {\kc labels\/} have their containing function bodies as their
+scope;
+
+\item {\kc macros\/} have scope from their declarations until the end
+of the program or an {\cd \#undef} command for the same macro,
+whichever comes first.
+
+\end{itemize}
+      The scope  of every  declaration is  limited to  the  file
+containing it, unless it is a global ({\cd extern}, or non-static
+top-level) declaration.
+
+     A declaration  may be  hidden by  other declarations whose scope
+overlaps that of the first declaration. For example:
+\begin{code}
+  int x; \addVspace
+
+  main() \\
+  \{ \+\\
+    int x; \\
+    \vdots \\
+    \{ \+\\
+       int x; \\
+       \vdots \-\\
+    \} \-\\
+  \} 
+\end{code}
+\noindent
+    Within the  function, the  top-level declaration  of {\cd x}  is hidden 
+by the declaration at  the start  of {\cd main()}.  Within the
+sub-block, both of the outer declarations are hidden.
+
+     When an  identifier is  used before  it is  declared, it is
+known as a {\kc forward 
+reference\/}\index{forward references}\index{declarations!forward}. 
+C  allows labels  to be  forward
+referenced  (as well as structure, union   and enumeration tags, see
+later). Referring to a function before it is declared is  acceptable,
+provided  the function  returns  an  integer.  If  it returns any 
+other type,  it must  have a  {\kc forward declaration\/} to enable
+the compiler to know what return type to expect. For example:
+\begin{code}
+float area(), volume();
+\end{code}
+\noindent
+     would tell  the compiler  that the  two functions  {\cd area}
+and {\cd volume} each return a {\cd float}, not an  integer.
+
+     Identifier names  in C  can be  {\kc overloaded\/} (that is, the
+same name can be used for  different  objects)  provided  they  are 
+in  different  {\kc overloading classes}\index{declarations!overloading classes}
+\index{overloading classes}.  There are five overloading
+classes:
+\begin{itemize}
+ \item {\kc preprocessor  macro names\/}  -- these  are independent
+of any other names in the C program, as preprocessing occurs first
+and in a separate pass. This overloading class is an exception  --
+all  occurrences in the program of macro names will be replaced. Thus
+macro names cannot be overloaded.
+
+\item {\kc statement labels\/}
+
+\item {\kc structure, union\/} and {\kc enumeration tags\/} (see later)
+
+\item {\kc structure\/} and {\kc union component names\/}
+
+\item all  {\kc other names\/}  fall into an overloading class that
+includes variables, functions, {\cd typedef}  names (see  later) and 
+enumeration constants  (see later).
+
+\end{itemize}
+     It is  illegal to  make two  declarations of  the same  name in 
+the same overloading class  in the  same block  or at  the  top 
+level;  we  call  such declarations {\kc conflicting  declarations\/}
+as  the compiler cannot determine which declaration should be used.
+The only exception is {\cd extern} declarations, which can  be used 
+freely, provided  that there  is  one and only one defining 
+declaration somewhere for each externally  declared identifier. For
+example, our functions {\cd area} and  {\cd volume} above have not
+been defined although they have been declared; thus there  must still
+be defining declarations  for them somewhere in the program, and
+these defining declarations would not conflict with the {\cd extern}
+declarations.
+
+     At most  one {\kc storage class specifier\/}  \index{storage classes}may appear  in a 
+declaration. The available storage classes are:  
+ \begin{itemize}\cd
+\item auto
+
+\item extern
+
+\item static
+
+\item register
+
+\item typedef
+\end{itemize}
+     We have  already seen  the first  three. A {\cd register}
+\index{storage classes!register@{\cd register}}
+\index{register@{\cd register}}declaration is useful when a  particular 
+variable  is used  heavily
+in  a function which needs to be optimised for  speed (for example, a
+sort routine). The {\cd register} storage class tells the  compiler
+to  allocate one  of the computer's hardware registers for that
+variable,  if possible.  Some compilers simply ignore this storage
+class.  You may not use the {\ms address-of} operator ({\cd \&}) with
+register variables.
+
+A {\cd typedef} 
+\index{typedef@{\cd typedef}}\index{storage classes!typedef@{\cd typedef}}
+declaration simply declares a name as a synonym
+for a type. It looks just  like a  normal declaration,  but the 
+``variable'' being declared is actually just  a name  which can  be
+used  to declare  other variables of that type. For example:
+\begin{code}
+typedef int \=*pointer, \\
+         \>   (*PFint)();
+\end{code}
+\noindent
+     declares {\cd pointer}  to be  a name  for the  type {\ms pointer
+to int\/}, and {\cd PFint} to be a name for  the type  {\ms pointer to
+function returning int\/}. Once a {\cd typedef} name has been declared,
+it may be used wherever a type specifier is needed; thus:
+\begin{code}
+ pointer \= a, b; \\
+ PFint \> f1, f2; 
+\end{code}
+\noindent
+     declares {\cd a}  and {\cd b}  to be {\ms pointers to int\/}, and
+{\cd f1} and {\cd f2} to be {\ms pointers to functions returning
+int\/}.
+
+
+
+\section{Initialisation Within Declarations}
+\index{declarations!initialisers for}
+     When we  declare a  variable, we cannot assume anything about its
+initial value. Some  compilers initialise all declared variables to
+zero, while others simply allocate  storage, regardless  of what
+values may be in that storage at the  time.  However,  when  we 
+declare  a  variable,  we  can  initialise  it immediately using
+\begin{display}\ms
+type identifier\/ {\cd =} initialisation
+\end{display}
+\noindent
+     Initialisers for  {\cd static} variables must be constant
+expressions, as these variables are  initialised by  the compiler
+(and placed in the {\bf .data} section).  Any expression may be used
+for {\cd auto} variables, as these are evaluated every time the
+automatic  variables  are  created.  Formal  arguments  of functions
+may not  be initialised.
+
+     As some compilers cannot perform floating point arithmetic, {\cd
+static float}s should be initialised with numbers only (not arbitrary
+constant expressions).
+
+     Some examples of {\cd int}, {\cd char} and {\cd float}
+initialisers are\index{variables!initialisation of declared}:
+\begin{code}
+  static int count=4*200, sum=0; \addVspace
+
+  main() \\
+  \{ \+\\
+       char ch=getchar(); \\
+       \vdots \-\\
+  \} \addVspace
+
+  static void calculate(k) \\
+  \> double k; \\
+  \{ \+\\
+       static double epsilon=1.0e-6; \\
+       auto float leeway = k*epsilon;\tab /* illegal in some compilers */ \\
+       \vdots \-\\
+  \} 
+\end{code}
+\noindent
+     Initialisers for pointers \index{pointers!initialisers of}must 
+evaluate to an integer, or
+an address plus or minus an integer constant. For example:
+\begin{code}
+  \#define NULL 0 				\\
+  double *dp = NULL; 				\\
+  long *population = (long *)32000000; 		\addVspace
+
+  char buffer[100]; 		\\
+  char \=*bufptr = buffer,		\\
+    \>   *bufend = \&buffer[99];	\addVspace
+
+  static short s; 		\\
+  short \=*sp1 = \&s,		\\
+    \>    *sp2 = \&s+3; \tab\=/* a valid initialisation, */ \\
+ \> \>                        /* but not recommended */	\addVspace
+
+  char *greet = "Press <return> to begin\verb+\+n";	\addVspace
+
+  float powers\_of\_pi[8]; 	\\
+  float \=*pi = \&powers\_of\_pi[1], 	\\
+   \>     *pi\_sq = \&powers\_of\_pi[2]; 
+\end{code}
+\noindent
+     Arrays can  be initialised as well\index{arrays!initialising}. 
+The last subscript of the
+array forms the ``most tight'' group.  For example,
+\begin{code}
+  int a[5] = \{ 0, 1, 2, 3, 4 \};	\addVspace
+
+  int b[2][3] = \{					\\ 
+  \> \{10, 20, 30\},					\\
+  \> \{40, 50, 60\}					\\
+  \} 										\\
+  int table[2][3][4] = \{			\\
+  \> \{ \{0,1,2,3\}, \{4,5,6,7\}, \{8,9,10,11\} \}, \\
+  \> \{ \{11,10,9,8\}, \{7,6,5,4\}, \{3,2,1,0\} \}  \\ 
+  \}; 
+\end{code}
+\noindent
+     If the  number of initialisers is less than the number of array
+elements, the remaining elements are initialised to zero. We also do
+not need to specify the size  of the  array, in  which case it is
+worked out from the initialiser.  For example:
+\begin{code}
+char *names[] = \{"John", "Mary", "Bob"\};
+\end{code}
+\noindent
+     will declare a three-element array of pointers to chars.
+
+     When initialising  {\cd char} arrays, remember that space must
+also be reserved for the terminating {\cd '\verb+\+0'}.  For example,
+\begin{code}
+char word[] = \{'c','a','t','\verb+\+0'\};
+\end{code}
+\noindent
+Recall it is not correct to say
+\begin{code}
+char word[] = \{"cat"\};
+\end{code}
+\noindent
+as {\cd "cat"} has type {\ms pointer to char\/}, whereas {\cd word}
+is an array whose elements are of type {\cd char}.
+
+Finally, the following examples are all equivalent ways of declaring
+and initialising a 4-{\cd char} array to contain a string, although some 
+are clearer than others:
+\begin{code}
+char str[4] \== \{ 'U', 'C', 'T' \}; \\
+char str[] \>= \{ 'U', 'C', 'T', '\verb+\+0' \}; \\
+char str[] \>= "UCT"; \\
+char str[] \>= \{ "UCT" \};
+\end{code}
