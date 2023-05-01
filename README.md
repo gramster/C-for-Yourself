@@ -1,4 +1,4 @@
-# C for Yourself - A Book on C
+# C for Yourself - A Textbook on C
 
 Back in the 1990s I taught a number of courses at the University of Cape Town, and together with Prof. Riel Smit, wrote the in-house
 textbook on C programming (I wrote most of the content; Riel was more of a TeXpert than me and polished it up a lot).
